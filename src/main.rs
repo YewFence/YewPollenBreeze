@@ -6,6 +6,7 @@ use std::process::Command;
 use anyhow::{bail, Context, Result};
 use clap::{Parser, Subcommand};
 use directories::ProjectDirs;
+use dotenvy::dotenv;
 use serde::{Deserialize, Serialize};
 
 #[derive(Parser)]
@@ -49,6 +50,8 @@ struct Remote {
 }
 
 fn main() -> Result<()> {
+    // 加载 .env，便于本地开发配置环境变量
+    let _ = dotenv();
     // 命令入口，负责分发子命令并执行核心逻辑
     let cli = Cli::parse();
     let config_path = config_path()?;
@@ -142,6 +145,19 @@ fn main() -> Result<()> {
 
 fn config_path() -> Result<PathBuf> {
     // 计算配置文件路径
+    // dev 环境下将配置存到可执行文件同目录的 .config
+    if std::env::var("PUSH_BACKUP_ENV")
+        .map(|value| value.eq_ignore_ascii_case("dev"))
+        .unwrap_or(false)
+    {
+        let exe_dir = std::env::current_exe()
+            .context("Failed to resolve current executable path")?
+            .parent()
+            .context("Failed to resolve executable directory")?
+            .to_path_buf();
+        return Ok(exe_dir.join(".config").join("config.toml"));
+    }
+
     // 使用系统推荐的配置目录，避免污染项目仓库
     let project_dirs = ProjectDirs::from("com", "push-backup", "push-backup")
         .context("Failed to resolve config directory")?;
