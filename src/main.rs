@@ -158,7 +158,9 @@ fn git_remote_names() -> Result<HashSet<String>> {
 }
 
 fn build_remote_url(base: &str, repo: &str) -> String {
-    let repo = repo.trim_start_matches('/');
+    let repo = repo.trim();
+    let repo = repo.trim_start_matches('/').trim_end_matches('/');
+    let repo = repo.strip_suffix(".git").unwrap_or(repo);
     let mut url = if base.ends_with('/') || base.ends_with(':') {
         format!("{base}{repo}")
     } else {
