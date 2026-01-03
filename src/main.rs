@@ -29,6 +29,11 @@ enum Commands {
     List,
     /// Apply saved remotes to the current git repository
     Apply { repo: String },
+    /// Push current branch to all configured remotes
+    Push {
+        #[arg(short = 'd', long = "dry-run")]
+        dry_run: bool,
+    },
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
@@ -102,6 +107,30 @@ fn main() -> Result<()> {
                     run_git(&["remote", "add", &remote.name, &url])?;
                     existing.insert(remote.name.clone());
                     println!("Added remote: {}", remote.name);
+                }
+            }
+        }
+        Commands::Push { dry_run } => {
+            let config = load_config(&config_path)?;
+            if config.remotes.is_empty() {
+                println!("No remotes saved.");
+                return Ok(());
+            }
+            ensure_git_repo()?;
+            let existing = git_remote_names()?;
+            let branch = current_branch()?;
+            for remote in config.remotes {
+                if !existing.contains(&remote.name) {
+                    bail!(
+                        "Remote '{}' not found in this repo. Run apply <repo> first.",
+                        remote.name
+                    );
+                }
+                if dry_run {
+                    println!("git push {} {}", remote.name, branch);
+                } else {
+                    run_git(&["push", &remote.name, &branch])?;
+                    println!("Pushed to remote: {}", remote.name);
                 }
             }
         }
@@ -194,4 +223,12 @@ fn run_git_capture(args: &[&str]) -> Result<String> {
         bail!("Git command failed: {}", stderr.trim());
     }
     Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
+}
+
+fn current_branch() -> Result<String> {
+    let branch = run_git_capture(&["rev-parse", "--abbrev-ref", "HEAD"])?;
+    if branch == "HEAD" {
+        bail!("Detached HEAD; please checkout a branch before pushing.");
+    }
+    Ok(branch)
 }
