@@ -49,6 +49,7 @@ struct Remote {
 }
 
 fn main() -> Result<()> {
+    // 命令入口，负责分发子命令并执行核心逻辑
     let cli = Cli::parse();
     let config_path = config_path()?;
 
@@ -140,12 +141,15 @@ fn main() -> Result<()> {
 }
 
 fn config_path() -> Result<PathBuf> {
+    // 计算配置文件路径
+    // 使用系统推荐的配置目录，避免污染项目仓库
     let project_dirs = ProjectDirs::from("com", "push-backup", "push-backup")
         .context("Failed to resolve config directory")?;
     Ok(project_dirs.config_dir().join("config.toml"))
 }
 
 fn load_config(path: &Path) -> Result<Config> {
+    // 读取本地配置，不存在时返回空配置
     if !path.exists() {
         return Ok(Config::default());
     }
@@ -157,6 +161,7 @@ fn load_config(path: &Path) -> Result<Config> {
 }
 
 fn save_config(path: &Path, config: &Config) -> Result<()> {
+    // 保存配置到本地文件
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent)
             .with_context(|| format!("Failed to create config dir: {}", parent.display()))?;
@@ -168,6 +173,7 @@ fn save_config(path: &Path, config: &Config) -> Result<()> {
 }
 
 fn ensure_git_repo() -> Result<()> {
+    // 确认当前目录是可用的 git 仓库
     if !Path::new(".git").exists() {
         bail!("Current directory is not a git repository.");
     }
@@ -176,6 +182,7 @@ fn ensure_git_repo() -> Result<()> {
 }
 
 fn git_remote_names() -> Result<HashSet<String>> {
+    // 获取当前仓库已有的 remote 名称集合
     let output = run_git_capture(&["remote"])?;
     let names = output
         .lines()
@@ -187,6 +194,8 @@ fn git_remote_names() -> Result<HashSet<String>> {
 }
 
 fn build_remote_url(base: &str, repo: &str) -> String {
+    // 生成完整 remote URL
+    // 清理仓库名，统一拼接并确保只有一个 .git 后缀
     let repo = repo.trim();
     let repo = repo.trim_start_matches('/').trim_end_matches('/');
     let repo = repo.strip_suffix(".git").unwrap_or(repo);
@@ -202,6 +211,7 @@ fn build_remote_url(base: &str, repo: &str) -> String {
 }
 
 fn run_git(args: &[&str]) -> Result<()> {
+    // 执行 git 命令，不关心输出
     let output = Command::new("git")
         .args(args)
         .output()
@@ -214,6 +224,7 @@ fn run_git(args: &[&str]) -> Result<()> {
 }
 
 fn run_git_capture(args: &[&str]) -> Result<String> {
+    // 执行 git 命令并返回输出内容
     let output = Command::new("git")
         .args(args)
         .output()
@@ -226,6 +237,8 @@ fn run_git_capture(args: &[&str]) -> Result<String> {
 }
 
 fn current_branch() -> Result<String> {
+    // 获取当前分支名
+    // 获取当前分支，避免在 detached HEAD 下误推送
     let branch = run_git_capture(&["rev-parse", "--abbrev-ref", "HEAD"])?;
     if branch == "HEAD" {
         bail!("Detached HEAD; please checkout a branch before pushing.");
