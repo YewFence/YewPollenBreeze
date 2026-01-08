@@ -123,19 +123,35 @@ fn main() -> Result<()> {
             ensure_git_repo()?;
             let existing = git_remote_names()?;
             let branch = current_branch()?;
+
+            let mut success_count = 0;
+            let mut fail_count = 0;
+
             for remote in config.remotes {
                 if !existing.contains(&remote.name) {
-                    bail!(
-                        "Remote '{}' not found in this repo. Run apply <repo> first.",
-                        remote.name
-                    );
+                    println!("✗ 远程仓库 '{}' 未在本地配置，请先运行 apply <repo>", remote.name);
+                    fail_count += 1;
+                    continue;
                 }
+
                 if dry_run {
                     println!("git push {} {}", remote.name, branch);
                 } else {
-                    run_git(&["push", &remote.name, &branch])?;
-                    println!("Pushed to remote: {}", remote.name);
+                    match run_git(&["push", &remote.name, &branch]) {
+                        Ok(_) => {
+                            println!("✓ 已将本地 {} 分支成功推送至 {} 的 {} 分支", branch, remote.name, branch);
+                            success_count += 1;
+                        }
+                        Err(e) => {
+                            println!("✗ 推送至 {} 失败: {}", remote.name, e);
+                            fail_count += 1;
+                        }
+                    }
                 }
+            }
+
+            if !dry_run {
+                println!("\n推送完成: {} 成功, {} 失败", success_count, fail_count);
             }
         }
     }
