@@ -95,6 +95,7 @@ fn main() -> Result<()> {
             }
         }
         Commands::Apply { repo } => {
+            check_git_available()?;
             let config = load_config(&config_path)?;
             if config.remotes.is_empty() {
                 println!("No remotes saved.");
@@ -112,9 +113,18 @@ fn main() -> Result<()> {
                     existing.insert(remote.name.clone());
                     println!("Added remote: {}", remote.name);
                 }
+
+                // 检查远程仓库可用性
+                print!("检查远程仓库 '{}' 的可用性...", remote.name);
+                match check_remote_available(&remote.name) {
+                    Ok(true) => println!(" ✓ 可访问"),
+                    Ok(false) => println!(" ✗ 无法访问（可能需要配置认证或网络不通）"),
+                    Err(e) => println!(" ✗ 检查失败: {}", e),
+                }
             }
         }
         Commands::Push { dry_run } => {
+            check_git_available()?;
             let config = load_config(&config_path)?;
             if config.remotes.is_empty() {
                 println!("No remotes saved.");
@@ -132,6 +142,24 @@ fn main() -> Result<()> {
                     println!("✗ 远程仓库 '{}' 未在本地配置，请先运行 apply <repo>", remote.name);
                     fail_count += 1;
                     continue;
+                }
+
+                // 在推送前检查远程仓库可用性
+                if !dry_run {
+                    print!("检查远程仓库 '{}' 的可用性...", remote.name);
+                    match check_remote_available(&remote.name) {
+                        Ok(true) => println!(" ✓ 可访问"),
+                        Ok(false) => {
+                            println!(" ✗ 无法访问，跳过推送");
+                            fail_count += 1;
+                            continue;
+                        }
+                        Err(e) => {
+                            println!(" ✗ 检查失败: {}，跳过推送", e);
+                            fail_count += 1;
+                            continue;
+                        }
+                    }
                 }
 
                 if dry_run {
@@ -273,4 +301,24 @@ fn current_branch() -> Result<String> {
         bail!("Detached HEAD; please checkout a branch before pushing.");
     }
     Ok(branch)
+}
+
+fn check_git_available() -> Result<()> {
+    // 检查 git 命令是否可用
+    Command::new("git")
+        .arg("--version")
+        .output()
+        .context("Git 命令不可用，请确保已安装 Git 并添加到 PATH 环境变量")?;
+    Ok(())
+}
+
+fn check_remote_available(remote_name: &str) -> Result<bool> {
+    // 检查远程仓库是否可访问
+    // 使用 git ls-remote 命令测试连接性
+    let output = Command::new("git")
+        .args(&["ls-remote", "--exit-code", remote_name])
+        .output()
+        .with_context(|| format!("无法检查远程仓库 '{}' 的可用性", remote_name))?;
+
+    Ok(output.status.success())
 }
