@@ -17,7 +17,7 @@ pub fn execute(config_path: &Path, name: Option<String>) -> Result<()> {
                 Some(r) => {
                     println!("=== 远程仓库详情 ===");
                     println!("名称: {}", r.name);
-                    println!("基础URL: {}", r.base);
+                    println!("基础地址: {}", r.base);
                 }
                 None => {
                     println!("未找到名为 '{}' 的远程仓库配置。", name);
@@ -30,7 +30,7 @@ pub fn execute(config_path: &Path, name: Option<String>) -> Result<()> {
             println!("共 {} 个配置\n", config.remotes.len());
             for (i, remote) in config.remotes.iter().enumerate() {
                 println!("[{}] {}", i + 1, remote.name);
-                println!("    基础URL: {}", remote.base);
+                println!("    基础地址: {}", remote.base);
                 if i < config.remotes.len() - 1 {
                     println!();
                 }

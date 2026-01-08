@@ -16,6 +16,6 @@ pub fn execute(config_path: &Path, name: String, base: String) -> Result<()> {
         config.remotes.push(Remote { name, base });
     }
     save_config(config_path, &config)?;
-    println!("Saved.");
+    println!("已保存。");
     Ok(())
 }

@@ -15,14 +15,14 @@ pub fn check_git_available() -> Result<()> {
 pub fn ensure_git_repo() -> Result<()> {
     // 确认当前目录是可用的 git 仓库
     if !Path::new(".git").exists() {
-        bail!("Current directory is not a git repository.");
+        bail!("当前目录不是 git 仓库。");
     }
     run_git(&["rev-parse", "--git-dir"])?;
     Ok(())
 }
 
 pub fn git_remote_names() -> Result<HashSet<String>> {
-    // 获取当前仓库已有的 remote 名称集合
+    // 获取当前仓库已有的远程仓库名称集合
     let output = run_git_capture(&["remote"])?;
     let names = output
         .lines()
@@ -34,11 +34,10 @@ pub fn git_remote_names() -> Result<HashSet<String>> {
 }
 
 pub fn current_branch() -> Result<String> {
-    // 获取当前分支名
-    // 获取当前分支，避免在 detached HEAD 下误推送
+    // 获取当前分支，避免在游离 HEAD 状态下误推送
     let branch = run_git_capture(&["rev-parse", "--abbrev-ref", "HEAD"])?;
     if branch == "HEAD" {
-        bail!("Detached HEAD; please checkout a branch before pushing.");
+        bail!("当前处于游离 HEAD 状态，请先切换到分支再推送。");
     }
     Ok(branch)
 }
@@ -73,10 +72,10 @@ fn run_git(args: &[&str]) -> Result<()> {
     let output = Command::new("git")
         .args(args)
         .output()
-        .with_context(|| format!("Failed to run git {}", args.join(" ")))?;
+        .with_context(|| format!("执行 git 命令失败: {}", args.join(" ")))?;
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        bail!("Git command failed: {}", stderr.trim());
+        bail!("git 命令执行失败: {}", stderr.trim());
     }
     Ok(())
 }
@@ -86,10 +85,10 @@ fn run_git_capture(args: &[&str]) -> Result<String> {
     let output = Command::new("git")
         .args(args)
         .output()
-        .with_context(|| format!("Failed to run git {}", args.join(" ")))?;
+        .with_context(|| format!("执行 git 命令失败: {}", args.join(" ")))?;
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        bail!("Git command failed: {}", stderr.trim());
+        bail!("git 命令执行失败: {}", stderr.trim());
     }
     Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
 }

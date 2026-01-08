@@ -5,7 +5,7 @@ use std::path::PathBuf;
 #[command(
     name = "push-backup",
     version,
-    about = "Persist multiple git remote URLs and apply them to the current repo"
+    about = "保存多个 git 远程地址，并应用到当前仓库"
 )]
 pub struct Cli {
     #[command(subcommand)]
@@ -14,27 +14,27 @@ pub struct Cli {
 
 #[derive(Subcommand)]
 pub enum Commands {
-    /// Add or update a remote base URL in the local config
+    /// 在本地配置中新增或更新远程仓库基础地址
     Add { name: String, base: String },
-    /// Remove a remote from the local config
+    /// 从本地配置中移除远程仓库
     Remove { name: String },
-    /// List saved remotes
+    /// 列出已保存的远程仓库
     List,
-    /// Show details of remotes (all if no name specified, or a specific one)
+    /// 显示远程仓库详情（不指定名称则显示全部）
     Show { name: Option<String> },
-    /// Apply saved remotes to the current git repository
+    /// 将已保存的远程仓库应用到当前 git 仓库
     Apply { repo: String },
-    /// Push current branch to all configured remotes
+    /// 推送当前分支到所有已配置的远程仓库
     Push {
         #[arg(short = 'd', long = "dry-run")]
         dry_run: bool,
     },
-    /// Export configuration to a file
+    /// 导出配置到文件
     Export {
         #[arg(short = 'o', long = "output")]
         output: Option<PathBuf>,
     },
-    /// Import configuration from a file
+    /// 从文件导入配置
     Import {
         #[arg(short = 'i', long = "input")]
         input: PathBuf,

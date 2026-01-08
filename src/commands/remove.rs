@@ -7,10 +7,10 @@ pub fn execute(config_path: &Path, name: String) -> Result<()> {
     let before = config.remotes.len();
     config.remotes.retain(|remote| remote.name != name);
     if config.remotes.len() == before {
-        println!("No matching remote found.");
+        println!("未找到匹配的远程仓库。");
         return Ok(());
     }
     save_config(config_path, &config)?;
-    println!("Removed.");
+    println!("已移除。");
     Ok(())
 }

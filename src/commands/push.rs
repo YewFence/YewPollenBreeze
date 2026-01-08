@@ -10,7 +10,7 @@ pub fn execute(config_path: &Path, dry_run: bool) -> Result<()> {
     check_git_available()?;
     let config = load_config(config_path)?;
     if config.remotes.is_empty() {
-        println!("No remotes saved.");
+        println!("没有保存的远程仓库配置。");
         return Ok(());
     }
     ensure_git_repo()?;
@@ -23,7 +23,7 @@ pub fn execute(config_path: &Path, dry_run: bool) -> Result<()> {
     for remote in config.remotes {
         if !existing.contains(&remote.name) {
             println!(
-                "✗ 远程仓库 '{}' 未在本地配置，请先运行 apply <repo>",
+                "✗ 远程仓库 '{}' 未在本地配置，请先运行 apply <仓库名>",
                 remote.name
             );
             fail_count += 1;
