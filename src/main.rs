@@ -28,12 +28,26 @@ enum Commands {
     Remove { name: String },
     /// List saved remotes
     List,
+    /// Show details of remotes (all if no name specified, or a specific one)
+    Show { name: Option<String> },
     /// Apply saved remotes to the current git repository
     Apply { repo: String },
     /// Push current branch to all configured remotes
     Push {
         #[arg(short = 'd', long = "dry-run")]
         dry_run: bool,
+    },
+    /// Export configuration to a file
+    Export {
+        #[arg(short = 'o', long = "output")]
+        output: Option<PathBuf>,
+    },
+    /// Import configuration from a file
+    Import {
+        #[arg(short = 'i', long = "input")]
+        input: PathBuf,
+        #[arg(short = 'm', long = "merge")]
+        merge: bool,
     },
 }
 
@@ -92,6 +106,42 @@ fn main() -> Result<()> {
             }
             for remote in config.remotes {
                 println!("{}\t{}", remote.name, remote.base);
+            }
+        }
+        Commands::Show { name } => {
+            let config = load_config(&config_path)?;
+            if config.remotes.is_empty() {
+                println!("没有保存的远程仓库配置。");
+                return Ok(());
+            }
+
+            match name {
+                Some(name) => {
+                    // 显示单个配置的详细信息
+                    let remote = config.remotes.iter().find(|r| r.name == name);
+                    match remote {
+                        Some(r) => {
+                            println!("=== 远程仓库详情 ===");
+                            println!("名称: {}", r.name);
+                            println!("基础URL: {}", r.base);
+                        }
+                        None => {
+                            println!("未找到名为 '{}' 的远程仓库配置。", name);
+                        }
+                    }
+                }
+                None => {
+                    // 显示所有配置的详细信息
+                    println!("=== 所有远程仓库配置 ===");
+                    println!("共 {} 个配置\n", config.remotes.len());
+                    for (i, remote) in config.remotes.iter().enumerate() {
+                        println!("[{}] {}", i + 1, remote.name);
+                        println!("    基础URL: {}", remote.base);
+                        if i < config.remotes.len() - 1 {
+                            println!();
+                        }
+                    }
+                }
             }
         }
         Commands::Apply { repo } => {
@@ -180,6 +230,65 @@ fn main() -> Result<()> {
 
             if !dry_run {
                 println!("\n推送完成: {} 成功, {} 失败", success_count, fail_count);
+            }
+        }
+        Commands::Export { output } => {
+            let config = load_config(&config_path)?;
+            if config.remotes.is_empty() {
+                println!("没有可导出的配置。");
+                return Ok(());
+            }
+
+            let export_path = match output {
+                Some(path) => path,
+                None => PathBuf::from("push-backup-config.toml"),
+            };
+
+            save_config(&export_path, &config)?;
+            println!("配置已导出到: {}", export_path.display());
+        }
+        Commands::Import { input, merge } => {
+            if !input.exists() {
+                bail!("导入文件不存在: {}", input.display());
+            }
+
+            let import_config = load_config(&input)?;
+            if import_config.remotes.is_empty() {
+                println!("导入文件中没有配置。");
+                return Ok(());
+            }
+
+            let mut config = if merge {
+                load_config(&config_path)?
+            } else {
+                Config::default()
+            };
+
+            let mut added = 0;
+            let mut updated = 0;
+
+            for import_remote in import_config.remotes {
+                let mut found = false;
+                for remote in &mut config.remotes {
+                    if remote.name == import_remote.name {
+                        remote.base = import_remote.base.clone();
+                        updated += 1;
+                        found = true;
+                        break;
+                    }
+                }
+                if !found {
+                    config.remotes.push(import_remote);
+                    added += 1;
+                }
+            }
+
+            save_config(&config_path, &config)?;
+
+            if merge {
+                println!("配置已合并: 新增 {} 个，更新 {} 个。", added, updated);
+            } else {
+                println!("配置已导入: {} 个远程仓库。", added);
             }
         }
     }
