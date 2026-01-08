@@ -145,17 +145,14 @@ fn main() -> Result<()> {
 
 fn config_path() -> Result<PathBuf> {
     // 计算配置文件路径
-    // dev 环境下将配置存到可执行文件同目录的 .config
+    // dev 环境下将配置存到项目根目录的 .dev 文件夹
     if std::env::var("PUSH_BACKUP_ENV")
         .map(|value| value.eq_ignore_ascii_case("dev"))
         .unwrap_or(false)
     {
-        let exe_dir = std::env::current_exe()
-            .context("Failed to resolve current executable path")?
-            .parent()
-            .context("Failed to resolve executable directory")?
-            .to_path_buf();
-        return Ok(exe_dir.join(".config").join("config.toml"));
+        let current_dir = std::env::current_dir()
+            .context("Failed to get current directory")?;
+        return Ok(current_dir.join(".dev").join("config.toml"));
     }
 
     // 使用系统推荐的配置目录，避免污染项目仓库

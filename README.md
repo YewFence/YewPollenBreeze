@@ -63,6 +63,16 @@ config.toml
 C:\Users\<你的用户名>\AppData\Roaming\push-backup\push-backup\config.toml
 ```
 
+### 开发环境配置
+
+在开发环境下（设置 `PUSH_BACKUP_ENV=dev`），配置文件会保存在项目根目录：
+
+```
+<项目根目录>/.dev/config.toml
+```
+
+这样可以方便开发调试，且不会在 `cargo clean` 后丢失配置。
+
 ## 环境变量与 .env
 
 支持从当前目录的 `.env` 加载环境变量，示例见 `.env.example`。
