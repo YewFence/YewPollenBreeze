@@ -1,0 +1,28 @@
+# push-backup 配置文件示例
+
+# 远程仓库配置
+# 每个 [[remotes]] 块定义一个 git 托管平台
+
+# 第一个配置将作为 fetch url，因为 git 必须配置 fetch url
+# 建议该 remote 仅用于推送备份，不要从该 remote 中拉取代码，而是自己设置一个专门用于拉取代码的 remote（例如 origin）
+[[remotes]]
+name = "github"
+base = "https://github.com/your-username"
+note = "GitHub 主账号"
+
+[[remotes]]
+name = "gitlab"
+base = "https://gitlab.com/your-username"
+note = "GitLab 备份"
+
+[[remotes]]
+name = "gitea"
+base = "https://gitea.com/your-username"
+# note 字段是可选的
+
+# 默认参数配置（可选）
+[defaults]
+retry = 3           # 推送失败时的重试次数
+retry_delay = 2000  # 重试间隔（毫秒）
+timeout = 60        # 推送超时时间（秒）
+check_timeout = 15  # 连接检查超时时间（秒）

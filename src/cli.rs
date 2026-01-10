@@ -125,7 +125,7 @@ pub enum ConfigCommands {
     /// 从文件导入配置
     Import {
         #[arg(short = 'i', long = "input")]
-        input: PathBuf,
+        input: Option<PathBuf>,
         #[arg(short = 'm', long = "merge")]
         merge: bool,
     },
