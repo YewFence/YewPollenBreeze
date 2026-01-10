@@ -99,5 +99,9 @@ fn main() -> Result<()> {
             cli::HookCommands::Uninstall { yes } => commands::hook::execute_uninstall(yes),
             cli::HookCommands::Status => commands::hook::execute_status(),
         },
+        cli::Commands::Markdown => {
+            commands::markdown();
+            Ok(())
+        }
     }
 }

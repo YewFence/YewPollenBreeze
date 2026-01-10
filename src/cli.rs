@@ -104,6 +104,9 @@ pub enum Commands {
         #[command(subcommand)]
         command: HookCommands,
     },
+    /// 生成 Markdown 文档
+    #[clap(hide = true)]
+    Markdown,
 }
 
 /// 配置相关的子命令
