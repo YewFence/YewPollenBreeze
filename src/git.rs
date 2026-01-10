@@ -105,3 +105,43 @@ fn run_git_capture(args: &[&str]) -> Result<String> {
     }
     Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
 }
+
+/// 通过 URL 获取远程分支的 commit hash
+pub fn git_ls_remote_ref(url: &str, branch: &str) -> Result<Option<String>> {
+    let output = Command::new("git")
+        .args(["ls-remote", url, &format!("refs/heads/{}", branch)])
+        .output()
+        .with_context(|| format!("无法获取远程仓库 '{}' 的引用", url))?;
+
+    if !output.status.success() {
+        return Ok(None); // 连接失败或分支不存在
+    }
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    // 输出格式: "commit_hash\trefs/heads/branch"
+    Ok(stdout.split_whitespace().next().map(String::from))
+}
+
+/// 计算本地 HEAD 与远程 commit 之间的 ahead/behind 数量
+pub fn git_count_ahead_behind(remote_commit: &str) -> Result<(usize, usize)> {
+    let output = run_git_capture(&[
+        "rev-list",
+        "--left-right",
+        "--count",
+        &format!("HEAD...{}", remote_commit),
+    ])?;
+    // 输出格式: "ahead\tbehind"
+    let parts: Vec<&str> = output.split_whitespace().collect();
+    let ahead = parts.first().and_then(|s| s.parse().ok()).unwrap_or(0);
+    let behind = parts.get(1).and_then(|s| s.parse().ok()).unwrap_or(0);
+    Ok((ahead, behind))
+}
+
+/// 通过 URL 检查远程仓库连接
+pub fn check_remote_available_by_url(url: &str) -> Result<bool> {
+    let output = Command::new("git")
+        .args(["ls-remote", url])
+        .output()
+        .with_context(|| format!("无法检查远程仓库 '{}' 的可用性", url))?;
+    Ok(output.status.success())
+}

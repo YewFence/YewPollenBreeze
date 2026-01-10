@@ -29,5 +29,7 @@ fn main() -> Result<()> {
         } => commands::push(&config_path, dry_run, only, except),
         cli::Commands::Export { output } => commands::export(&config_path, output),
         cli::Commands::Import { input, merge } => commands::import(&config_path, input, merge),
+        cli::Commands::Status => commands::status(&config_path),
+        cli::Commands::Check => commands::check(&config_path),
     }
 }

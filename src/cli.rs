@@ -60,4 +60,8 @@ pub enum Commands {
         #[arg(short = 'm', long = "merge")]
         merge: bool,
     },
+    /// 查看各远程仓库的同步状态
+    Status,
+    /// 检查远程仓库连接是否正常
+    Check,
 }

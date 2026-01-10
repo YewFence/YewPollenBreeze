@@ -1,5 +1,6 @@
 mod add;
 mod apply;
+mod check;
 mod clean;
 mod export;
 mod import_cmd;
@@ -7,9 +8,11 @@ mod list;
 mod push;
 mod remove;
 mod show;
+mod status;
 
 pub use add::execute as add;
 pub use apply::execute as apply;
+pub use check::execute as check;
 pub use clean::execute as clean;
 pub use export::execute as export;
 pub use import_cmd::execute as import;
@@ -17,3 +20,4 @@ pub use list::execute as list;
 pub use push::execute as push;
 pub use remove::execute as remove;
 pub use show::execute as show;
+pub use status::execute as status;
