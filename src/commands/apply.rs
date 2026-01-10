@@ -32,14 +32,17 @@ pub fn execute(config_path: &Path, repo: Option<String>, yes: bool) -> Result<()
             let remote_candidate = if existing.contains("origin") {
                 Some("origin")
             } else {
-                existing.iter().find(|&n| n != REMOTE_NAME).map(|s| s.as_str())
+                existing
+                    .iter()
+                    .find(|&n| n != REMOTE_NAME)
+                    .map(|s| s.as_str())
             };
 
             if let Some(remote) = remote_candidate {
                 if let Ok(url) = run_git_get_remote_url(remote) {
                     let url = url.trim();
                     let url = url.strip_suffix(".git").unwrap_or(url);
-                    if let Some(name) = url.split('/').last() {
+                    if let Some(name) = url.rsplit('/').next() {
                         if !name.is_empty() {
                             detected_name = Some(name.to_string());
                         }
@@ -56,7 +59,8 @@ pub fn execute(config_path: &Path, repo: Option<String>, yes: bool) -> Result<()
                 }
             }
 
-            let name = detected_name.ok_or_else(|| anyhow::anyhow!("无法自动检测仓库名称，请手动指定"))?;
+            let name =
+                detected_name.ok_or_else(|| anyhow::anyhow!("无法自动检测仓库名称，请手动指定"))?;
 
             println!("检测到仓库名称为: {}", name);
             if !yes {

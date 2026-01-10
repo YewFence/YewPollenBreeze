@@ -62,6 +62,18 @@ pub enum Commands {
         /// 传递额外的 git 参数，可多次使用（如 --git-args="--no-verify"）
         #[arg(long = "git-args")]
         git_args: Vec<String>,
+        /// 推送失败时的最大重试次数（默认 3 次）
+        #[arg(long = "retry", default_value = "3")]
+        retry: u32,
+        /// 重试间隔毫秒数（默认 1000ms）
+        #[arg(long = "retry-delay", default_value = "1000")]
+        retry_delay: u64,
+        /// 跳过连接验证，直接尝试推送
+        #[arg(long = "skip-check")]
+        skip_check: bool,
+        /// 超时时间（秒），0 表示不限制（默认 30 秒）
+        #[arg(long = "timeout", default_value = "30")]
+        timeout: u64,
     },
     /// 导出配置到文件
     Export {

@@ -29,8 +29,8 @@ pub fn config_path() -> Result<PathBuf> {
     }
 
     // 使用系统推荐的配置目录，避免污染项目仓库
-    let project_dirs = ProjectDirs::from("com", "push-backup", "push-backup")
-        .context("获取配置目录失败")?;
+    let project_dirs =
+        ProjectDirs::from("com", "push-backup", "push-backup").context("获取配置目录失败")?;
     Ok(project_dirs.config_dir().join("config.toml"))
 }
 
@@ -53,7 +53,6 @@ pub fn save_config(path: &Path, config: &Config) -> Result<()> {
             .with_context(|| format!("创建配置目录失败: {}", parent.display()))?;
     }
     let content = toml::to_string_pretty(config).context("序列化配置失败")?;
-    fs::write(path, content)
-        .with_context(|| format!("写入配置文件失败: {}", path.display()))?;
+    fs::write(path, content).with_context(|| format!("写入配置文件失败: {}", path.display()))?;
     Ok(())
 }

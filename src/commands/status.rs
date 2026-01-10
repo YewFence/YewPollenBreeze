@@ -89,7 +89,10 @@ fn print_sync_status(name: &str, url: &str, branch: &str) -> Result<()> {
             }
         }
         None => {
-            println!("{:12} ✗ 无法获取远程状态 (分支不存在或连接失败)", format!("{}:", name));
+            println!(
+                "{:12} ✗ 无法获取远程状态 (分支不存在或连接失败)",
+                format!("{}:", name)
+            );
         }
     }
 

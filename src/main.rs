@@ -7,7 +7,7 @@ mod utils;
 use anyhow::Result;
 use clap::Parser;
 use dotenvy::dotenv;
-use git::PushOptions;
+use git::{PushOptions, RetryConfig};
 
 fn main() -> Result<()> {
     // 加载 .env，便于本地开发配置环境变量
@@ -32,6 +32,10 @@ fn main() -> Result<()> {
             set_upstream,
             tags,
             git_args,
+            retry,
+            retry_delay,
+            skip_check,
+            timeout,
         } => {
             // 使用 shlex 解析每个 git_args，支持引号包裹的参数
             let extra_args: Vec<String> = git_args
@@ -47,7 +51,13 @@ fn main() -> Result<()> {
                 extra_args,
             };
 
-            commands::push(&config_path, dry_run, only, except, &options)
+            let retry_config = RetryConfig {
+                max_retries: retry,
+                delay_ms: retry_delay,
+                timeout_secs: timeout,
+            };
+
+            commands::push(&config_path, dry_run, only, except, &options, &retry_config, skip_check)
         }
         cli::Commands::Export { output } => commands::export(&config_path, output),
         cli::Commands::Import { input, merge } => commands::import(&config_path, input, merge),

@@ -1,7 +1,9 @@
 use anyhow::{bail, Context, Result};
 use std::collections::HashSet;
 use std::path::Path;
-use std::process::Command;
+use std::process::{Command, Stdio};
+use std::time::Duration;
+use wait_timeout::ChildExt;
 
 pub fn check_git_available() -> Result<()> {
     // 检查 git 命令是否可用
@@ -43,14 +45,28 @@ pub fn current_branch() -> Result<String> {
 }
 
 pub fn check_remote_available(remote_name: &str) -> Result<bool> {
-    // 检查远程仓库是否可访问
-    // 使用 git ls-remote 命令测试连接性
-    let output = Command::new("git")
+    check_remote_available_with_timeout(remote_name, 10)
+}
+
+pub fn check_remote_available_with_timeout(remote_name: &str, timeout_secs: u64) -> Result<bool> {
+    // 检查远程仓库是否可访问，带超时控制
+    let mut child = Command::new("git")
         .args(["ls-remote", remote_name])
-        .output()
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn()
         .with_context(|| format!("无法检查远程仓库 '{}' 的可用性", remote_name))?;
 
-    Ok(output.status.success())
+    let timeout = Duration::from_secs(timeout_secs);
+    match child.wait_timeout(timeout)? {
+        Some(status) => Ok(status.success()),
+        None => {
+            // 超时，杀死进程
+            let _ = child.kill();
+            let _ = child.wait();
+            bail!("检查超时（{}秒）", timeout_secs)
+        }
+    }
 }
 
 // Git 操作辅助函数
@@ -85,7 +101,23 @@ pub struct PushOptions {
     pub extra_args: Vec<String>,
 }
 
-pub fn run_git_push(remote: &str, branch: &str, options: &PushOptions) -> Result<()> {
+/// 重试配置
+#[derive(Clone, Default)]
+pub struct RetryConfig {
+    /// 最大重试次数
+    pub max_retries: u32,
+    /// 重试间隔（毫秒）
+    pub delay_ms: u64,
+    /// 超时时间（秒），0 表示不限制
+    pub timeout_secs: u64,
+}
+
+pub fn run_git_push_with_timeout(
+    remote: &str,
+    branch: &str,
+    options: &PushOptions,
+    timeout_secs: u64,
+) -> Result<()> {
     let mut args = vec!["push".to_string()];
 
     // 专用标志
@@ -110,7 +142,12 @@ pub fn run_git_push(remote: &str, branch: &str, options: &PushOptions) -> Result
     args.extend(options.extra_args.clone());
 
     let args_ref: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
-    run_git(&args_ref)
+
+    if timeout_secs > 0 {
+        run_git_with_timeout(&args_ref, timeout_secs)
+    } else {
+        run_git(&args_ref)
+    }
 }
 
 // 内部函数：执行 git 命令
@@ -125,6 +162,34 @@ fn run_git(args: &[&str]) -> Result<()> {
         bail!("git 命令执行失败: {}", stderr.trim());
     }
     Ok(())
+}
+
+// 内部函数：执行 git 命令，带超时控制
+fn run_git_with_timeout(args: &[&str], timeout_secs: u64) -> Result<()> {
+    let mut child = Command::new("git")
+        .args(args)
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .with_context(|| format!("执行 git 命令失败: {}", args.join(" ")))?;
+
+    let timeout = Duration::from_secs(timeout_secs);
+    match child.wait_timeout(timeout)? {
+        Some(status) => {
+            if !status.success() {
+                let output = child.wait_with_output()?;
+                let stderr = String::from_utf8_lossy(&output.stderr);
+                bail!("git 命令执行失败: {}", stderr.trim());
+            }
+            Ok(())
+        }
+        None => {
+            // 超时，杀死进程
+            let _ = child.kill();
+            let _ = child.wait();
+            bail!("命令超时（{}秒）", timeout_secs)
+        }
+    }
 }
 
 // 内部函数：执行 git 命令并返回输出内容
