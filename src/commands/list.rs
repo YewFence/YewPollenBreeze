@@ -9,7 +9,11 @@ pub fn execute(config_path: &Path) -> Result<()> {
         return Ok(());
     }
     for remote in config.remotes {
-        println!("{}\t{}", remote.name, remote.base);
+        if let Some(note) = remote.note {
+            println!("{}\t{}\t# {}", remote.name, remote.base, note);
+        } else {
+            println!("{}\t{}", remote.name, remote.base);
+        }
     }
     Ok(())
 }

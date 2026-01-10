@@ -14,6 +14,7 @@ pub struct Remote {
     pub name: String,
     #[serde(alias = "url")]
     pub base: String,
+    pub note: Option<String>,
 }
 
 pub fn config_path() -> Result<PathBuf> {

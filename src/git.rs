@@ -46,7 +46,7 @@ pub fn check_remote_available(remote_name: &str) -> Result<bool> {
     // 检查远程仓库是否可访问
     // 使用 git ls-remote 命令测试连接性
     let output = Command::new("git")
-        .args(["ls-remote", "--exit-code", remote_name])
+        .args(["ls-remote", remote_name])
         .output()
         .with_context(|| format!("无法检查远程仓库 '{}' 的可用性", remote_name))?;
 

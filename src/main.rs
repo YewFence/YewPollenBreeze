@@ -16,7 +16,7 @@ fn main() -> Result<()> {
     let config_path = config::config_path()?;
 
     match cli.command {
-        cli::Commands::Add { name, base } => commands::add(&config_path, name, base),
+        cli::Commands::Add { name, base, note } => commands::add(&config_path, name, base, note),
         cli::Commands::Remove { name } => commands::remove(&config_path, name),
         cli::Commands::List => commands::list(&config_path),
         cli::Commands::Show { name } => commands::show(&config_path, name),

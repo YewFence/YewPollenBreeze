@@ -15,7 +15,13 @@ pub struct Cli {
 #[derive(Subcommand)]
 pub enum Commands {
     /// 在本地配置中新增或更新远程仓库基础地址
-    Add { name: String, base: String },
+    Add {
+        name: String,
+        base: String,
+        /// 可选的备注信息，仅作为提示
+        #[arg(short = 'n', long = "note")]
+        note: Option<String>,
+    },
     /// 从本地配置中移除远程仓库
     Remove { name: String },
     /// 列出已保存的远程仓库
