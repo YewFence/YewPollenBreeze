@@ -17,10 +17,7 @@ fn main() -> Result<()> {
     let config_path = config::config_path()?;
 
     match cli.command {
-        cli::Commands::Add { name, base, note } => commands::add(&config_path, name, base, note),
-        cli::Commands::Remove { name } => commands::remove(&config_path, name),
-        cli::Commands::List => commands::list(&config_path),
-        cli::Commands::Show { name } => commands::show(&config_path, name),
+        cli::Commands::Config { command } => commands::config(&config_path, command),
         cli::Commands::Apply { repo, yes, timeout, dry_run } => {
             let cfg = config::load_config(&config_path)?;
             let timeout = timeout
@@ -72,8 +69,6 @@ fn main() -> Result<()> {
 
             commands::push(&config_path, dry_run, only, except, &options, &retry_config, skip_check)
         }
-        cli::Commands::Export { output } => commands::export(&config_path, output),
-        cli::Commands::Import { input, merge } => commands::import(&config_path, input, merge),
         cli::Commands::Status => commands::status(&config_path),
         cli::Commands::Check { timeout } => {
             let cfg = config::load_config(&config_path)?;
