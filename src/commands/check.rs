@@ -1,6 +1,6 @@
 use crate::config::{load_config, Config};
 use crate::git::{
-    check_git_available, check_remote_available_by_url, ensure_git_repo, git_remote_names,
+    check_git_available, check_remote_available, ensure_git_repo, git_remote_names,
     run_git_get_push_urls,
 };
 use anyhow::Result;
@@ -8,7 +8,7 @@ use std::path::Path;
 
 const REMOTE_NAME: &str = "push-backup";
 
-pub fn execute(config_path: &Path) -> Result<()> {
+pub fn execute(config_path: &Path, timeout: u64) -> Result<()> {
     check_git_available()?;
     ensure_git_repo()?;
 
@@ -37,7 +37,7 @@ pub fn execute(config_path: &Path) -> Result<()> {
 
         print!("{:12} ", format!("{}:", name));
 
-        match check_remote_available_by_url(&url) {
+        match check_remote_available(&url, timeout) {
             Ok(true) => {
                 println!("✓ 连接正常");
                 success_count += 1;

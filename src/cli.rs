@@ -34,6 +34,9 @@ pub enum Commands {
         /// 自动确认推断的仓库名称
         #[arg(short = 'y', long = "yes")]
         yes: bool,
+        /// 连接检查超时时间（秒），默认 10 秒
+        #[arg(long = "timeout", default_value = "10")]
+        timeout: u64,
     },
     /// 清理本工具创建的远程仓库
     Clean,
@@ -90,5 +93,9 @@ pub enum Commands {
     /// 查看各远程仓库的同步状态
     Status,
     /// 检查远程仓库连接是否正常
-    Check,
+    Check {
+        /// 连接检查超时时间（秒），默认 10 秒
+        #[arg(long = "timeout", default_value = "10")]
+        timeout: u64,
+    },
 }

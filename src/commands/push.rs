@@ -1,7 +1,7 @@
 use crate::config::load_config;
 use crate::git::{
-    check_git_available, check_remote_available_with_timeout, current_branch, ensure_git_repo,
-    git_remote_names, run_git_get_push_urls, run_git_push_with_timeout, PushOptions, RetryConfig,
+    check_git_available, check_remote_available, current_branch, ensure_git_repo,
+    git_remote_names, run_git_get_push_urls, run_git_push, PushOptions, RetryConfig,
 };
 use anyhow::Result;
 use std::path::Path;
@@ -164,7 +164,7 @@ pub fn execute(
                     "检查远程仓库 '{}' ({}) 的可用性...",
                     task.display_name, task.url
                 );
-                match check_remote_available_with_timeout(&task.url, retry_config.timeout_secs) {
+                match check_remote_available(&task.url, retry_config.timeout_secs) {
                     Ok(true) => {
                         println!(" ✓ 可访问");
                     }
@@ -184,7 +184,7 @@ pub fn execute(
             }
 
             // 执行推送
-            match run_git_push_with_timeout(&task.url, &branch, options, retry_config.timeout_secs) {
+            match run_git_push(&task.url, &branch, options, retry_config.timeout_secs) {
                 Ok(_) => {
                     println!(
                         "✓ 已将本地 {} 分支成功推送至 {}",

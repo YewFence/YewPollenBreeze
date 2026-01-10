@@ -44,11 +44,7 @@ pub fn current_branch() -> Result<String> {
     Ok(branch)
 }
 
-pub fn check_remote_available(remote_name: &str) -> Result<bool> {
-    check_remote_available_with_timeout(remote_name, 10)
-}
-
-pub fn check_remote_available_with_timeout(remote_name: &str, timeout_secs: u64) -> Result<bool> {
+pub fn check_remote_available(remote_name: &str, timeout_secs: u64) -> Result<bool> {
     // 检查远程仓库是否可访问，带超时控制
     let mut child = Command::new("git")
         .args(["ls-remote", remote_name])
@@ -112,12 +108,14 @@ pub struct RetryConfig {
     pub timeout_secs: u64,
 }
 
-pub fn run_git_push_with_timeout(
+pub fn run_git_push(
     remote: &str,
     branch: &str,
     options: &PushOptions,
     timeout_secs: u64,
 ) -> Result<()> {
+    // 执行 git push 操作，可选是否配置超时
+    // 构建 git push 命令参数
     let mut args = vec!["push".to_string()];
 
     // 专用标志
@@ -236,11 +234,3 @@ pub fn git_count_ahead_behind(remote_commit: &str) -> Result<(usize, usize)> {
     Ok((ahead, behind))
 }
 
-/// 通过 URL 检查远程仓库连接
-pub fn check_remote_available_by_url(url: &str) -> Result<bool> {
-    let output = Command::new("git")
-        .args(["ls-remote", url])
-        .output()
-        .with_context(|| format!("无法检查远程仓库 '{}' 的可用性", url))?;
-    Ok(output.status.success())
-}

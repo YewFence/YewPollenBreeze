@@ -21,7 +21,7 @@ fn main() -> Result<()> {
         cli::Commands::Remove { name } => commands::remove(&config_path, name),
         cli::Commands::List => commands::list(&config_path),
         cli::Commands::Show { name } => commands::show(&config_path, name),
-        cli::Commands::Apply { repo, yes } => commands::apply(&config_path, repo, yes),
+        cli::Commands::Apply { repo, yes, timeout } => commands::apply(&config_path, repo, yes, timeout),
         cli::Commands::Clean => commands::clean(),
         cli::Commands::Push {
             dry_run,
@@ -62,6 +62,6 @@ fn main() -> Result<()> {
         cli::Commands::Export { output } => commands::export(&config_path, output),
         cli::Commands::Import { input, merge } => commands::import(&config_path, input, merge),
         cli::Commands::Status => commands::status(&config_path),
-        cli::Commands::Check => commands::check(&config_path),
+        cli::Commands::Check { timeout } => commands::check(&config_path, timeout),
     }
 }

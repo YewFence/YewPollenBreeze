@@ -11,7 +11,7 @@ use std::path::Path;
 
 const REMOTE_NAME: &str = "push-backup";
 
-pub fn execute(config_path: &Path, repo: Option<String>, yes: bool) -> Result<()> {
+pub fn execute(config_path: &Path, repo: Option<String>, yes: bool, timeout: u64) -> Result<()> {
     check_git_available()?;
     let config = load_config(config_path)?;
     if config.remotes.is_empty() {
@@ -115,7 +115,7 @@ pub fn execute(config_path: &Path, repo: Option<String>, yes: bool) -> Result<()
 
         // 检查可用性 (使用 URL 进行检查)
         print!("检查远程仓库 '{}' ({}) 的可用性...", name, url);
-        match check_remote_available(&url) {
+        match check_remote_available(&url, timeout) {
             Ok(true) => println!(" ✓ 可访问"),
             Ok(false) => println!(" ✗ 无法访问（可能需要配置认证或网络不通）"),
             Err(e) => println!(" ✗ 检查失败: {}", e),
