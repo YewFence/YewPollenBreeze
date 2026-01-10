@@ -62,10 +62,6 @@ pub fn run_git_remote_remove(name: &str) -> Result<()> {
     run_git(&["remote", "remove", name])
 }
 
-pub fn run_git_set_url(name: &str, url: &str) -> Result<()> {
-    run_git(&["remote", "set-url", name, url])
-}
-
 pub fn run_git_add_push_url(name: &str, url: &str) -> Result<()> {
     run_git(&["remote", "set-url", "--add", "--push", name, url])
 }

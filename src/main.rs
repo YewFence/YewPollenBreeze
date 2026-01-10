@@ -21,7 +21,11 @@ fn main() -> Result<()> {
         cli::Commands::List => commands::list(&config_path),
         cli::Commands::Show { name } => commands::show(&config_path, name),
         cli::Commands::Apply { repo } => commands::apply(&config_path, repo),
-        cli::Commands::Push { dry_run } => commands::push(&config_path, dry_run),
+        cli::Commands::Push {
+            dry_run,
+            only,
+            except,
+        } => commands::push(&config_path, dry_run, only, except),
         cli::Commands::Export { output } => commands::export(&config_path, output),
         cli::Commands::Import { input, merge } => commands::import(&config_path, input, merge),
     }

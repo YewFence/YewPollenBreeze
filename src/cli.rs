@@ -34,6 +34,12 @@ pub enum Commands {
     Push {
         #[arg(short = 'd', long = "dry-run")]
         dry_run: bool,
+        /// 仅推送到指定名称的仓库（可多次使用）
+        #[arg(long = "only")]
+        only: Vec<String>,
+        /// 排除指定名称的仓库（可多次使用）
+        #[arg(long = "except")]
+        except: Vec<String>,
     },
     /// 导出配置到文件
     Export {
