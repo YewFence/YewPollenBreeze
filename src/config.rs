@@ -4,9 +4,34 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
 
+// 硬编码默认值常量
+pub const DEFAULT_RETRY: u32 = 3;
+pub const DEFAULT_RETRY_DELAY: u64 = 1000;
+pub const DEFAULT_PUSH_TIMEOUT: u64 = 30;
+pub const DEFAULT_CHECK_TIMEOUT: u64 = 10;
+
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct Config {
     pub remotes: Vec<Remote>,
+    #[serde(default)]
+    pub defaults: Defaults,
+}
+
+/// 默认配置项
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct Defaults {
+    /// 最大重试次数（push 命令）
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub retry: Option<u32>,
+    /// 重试间隔毫秒数（push 命令）
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub retry_delay: Option<u64>,
+    /// push 命令超时时间（秒）
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub timeout: Option<u64>,
+    /// apply/check 命令超时时间（秒）
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub check_timeout: Option<u64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -34,9 +34,9 @@ pub enum Commands {
         /// 自动确认推断的仓库名称
         #[arg(short = 'y', long = "yes")]
         yes: bool,
-        /// 连接检查超时时间（秒），默认 10 秒
-        #[arg(long = "timeout", default_value = "10")]
-        timeout: u64,
+        /// 连接检查超时时间（秒）
+        #[arg(long = "timeout")]
+        timeout: Option<u64>,
     },
     /// 清理本工具创建的远程仓库
     Clean,
@@ -65,18 +65,18 @@ pub enum Commands {
         /// 传递额外的 git 参数，可多次使用（如 --git-args="--no-verify"）
         #[arg(long = "git-args")]
         git_args: Vec<String>,
-        /// 推送失败时的最大重试次数（默认 3 次）
-        #[arg(long = "retry", default_value = "3")]
-        retry: u32,
-        /// 重试间隔毫秒数（默认 1000ms）
-        #[arg(long = "retry-delay", default_value = "1000")]
-        retry_delay: u64,
+        /// 推送失败时的最大重试次数
+        #[arg(long = "retry")]
+        retry: Option<u32>,
+        /// 重试间隔毫秒数
+        #[arg(long = "retry-delay")]
+        retry_delay: Option<u64>,
         /// 跳过连接验证，直接尝试推送
         #[arg(long = "skip-check")]
         skip_check: bool,
-        /// 超时时间（秒），0 表示不限制（默认 30 秒）
-        #[arg(long = "timeout", default_value = "30")]
-        timeout: u64,
+        /// 超时时间（秒），0 表示不限制
+        #[arg(long = "timeout")]
+        timeout: Option<u64>,
     },
     /// 导出配置到文件
     Export {
@@ -94,8 +94,8 @@ pub enum Commands {
     Status,
     /// 检查远程仓库连接是否正常
     Check {
-        /// 连接检查超时时间（秒），默认 10 秒
-        #[arg(long = "timeout", default_value = "10")]
-        timeout: u64,
+        /// 连接检查超时时间（秒）
+        #[arg(long = "timeout")]
+        timeout: Option<u64>,
     },
 }
