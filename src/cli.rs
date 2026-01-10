@@ -29,7 +29,12 @@ pub enum Commands {
     /// 显示远程仓库详情（不指定名称则显示全部）
     Show { name: Option<String> },
     /// 将已保存的远程仓库应用到当前 git 仓库
-    Apply { repo: String },
+    Apply {
+        repo: Option<String>,
+        /// 自动确认推断的仓库名称
+        #[arg(short = 'y', long = "yes")]
+        yes: bool,
+    },
     /// 清理本工具创建的远程仓库
     Clean,
     /// 推送当前分支到所有已配置的远程仓库

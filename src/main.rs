@@ -20,7 +20,7 @@ fn main() -> Result<()> {
         cli::Commands::Remove { name } => commands::remove(&config_path, name),
         cli::Commands::List => commands::list(&config_path),
         cli::Commands::Show { name } => commands::show(&config_path, name),
-        cli::Commands::Apply { repo } => commands::apply(&config_path, repo),
+        cli::Commands::Apply { repo, yes } => commands::apply(&config_path, repo, yes),
         cli::Commands::Clean => commands::clean(),
         cli::Commands::Push {
             dry_run,

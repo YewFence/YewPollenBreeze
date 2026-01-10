@@ -66,6 +66,10 @@ pub fn run_git_add_push_url(name: &str, url: &str) -> Result<()> {
     run_git(&["remote", "set-url", "--add", "--push", name, url])
 }
 
+pub fn run_git_get_remote_url(name: &str) -> Result<String> {
+    run_git_capture(&["remote", "get-url", name])
+}
+
 pub fn run_git_get_push_urls(name: &str) -> Result<Vec<String>> {
     let output = run_git_capture(&["remote", "get-url", "--all", "--push", name])?;
     Ok(output.lines().map(String::from).collect())
