@@ -4,6 +4,8 @@ use crate::git::{
     run_git_get_push_urls, run_git_push, PushOptions, RetryConfig,
 };
 use anyhow::Result;
+use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
+use rayon::prelude::*;
 use std::path::Path;
 use std::thread;
 use std::time::Duration;
@@ -24,6 +26,13 @@ enum PushStatus {
     Pending, // 待推送
     Success, // 成功
     Failed,  // 失败
+}
+
+/// 单次推送的结果
+struct PushResult {
+    idx: usize,
+    success: bool,
+    error: Option<String>,
 }
 
 pub fn execute(
@@ -147,54 +156,119 @@ pub fn execute(
             println!();
         }
 
-        // 执行本轮推送
-        for &idx in &pending_tasks {
-            let task = &mut tasks[idx];
+        // 创建多进度条
+        let mp = MultiProgress::new();
 
-            // 首轮之后只处理失败的任务
-            if round > 0 && task.status == PushStatus::Pending {
-                continue;
-            }
+        // 总进度条
+        let total_style = ProgressStyle::default_bar()
+            .template("{msg} [{bar:20.cyan/dim}] {pos}/{len}")
+            .unwrap()
+            .progress_chars("█░░");
+        let total_bar = mp.add(ProgressBar::new(pending_tasks.len() as u64));
+        total_bar.set_style(total_style);
+        total_bar.set_message("推送中");
 
-            task.attempts += 1;
+        // 单任务进度条样式
+        let style = ProgressStyle::default_spinner()
+            .template("{spinner:.cyan} {wide_msg}")
+            .unwrap();
 
-            // 可用性检查（除非 skip_check）
-            if !skip_check {
-                print!(
-                    "检查远程仓库 '{}' ({}) 的可用性...",
-                    task.display_name, task.url
-                );
-                match check_remote_available(&task.url, retry_config.timeout_secs) {
-                    Ok(true) => {
-                        println!(" ✓ 可访问");
+        // 为每个待处理任务创建进度条
+        let bars: Vec<Option<ProgressBar>> = tasks
+            .iter()
+            .enumerate()
+            .map(|(i, task)| {
+                if pending_tasks.contains(&i) {
+                    let pb = mp.add(ProgressBar::new_spinner());
+                    pb.set_style(style.clone());
+                    pb.set_message(format!("○ {} 等待中", task.display_name));
+                    Some(pb)
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        // 并发推送
+        let results: Vec<PushResult> = pending_tasks
+            .par_iter()
+            .filter_map(|&idx| {
+                let task = &tasks[idx];
+
+                // 首轮之后只处理失败的任务
+                if round > 0 && task.status == PushStatus::Pending {
+                    return None;
+                }
+
+                let pb = bars[idx].as_ref().unwrap();
+
+                // 更新状态：推送中
+                pb.set_message(format!("◐ {} 推送中...", task.display_name));
+                pb.enable_steady_tick(Duration::from_millis(100));
+
+                // 可用性检查（如果需要）
+                if !skip_check {
+                    pb.set_message(format!("◐ {} 检查可用性...", task.display_name));
+                    match check_remote_available(&task.url, retry_config.timeout_secs) {
+                        Ok(true) => {}
+                        Ok(false) => {
+                            pb.finish_with_message(format!("✗ {} 无法访问", task.display_name));
+                            total_bar.inc(1);
+                            return Some(PushResult {
+                                idx,
+                                success: false,
+                                error: Some("远程仓库无法访问".to_string()),
+                            });
+                        }
+                        Err(e) => {
+                            pb.finish_with_message(format!("✗ {} 检查失败", task.display_name));
+                            total_bar.inc(1);
+                            return Some(PushResult {
+                                idx,
+                                success: false,
+                                error: Some(format!("检查失败: {}", e)),
+                            });
+                        }
                     }
-                    Ok(false) => {
-                        println!(" ✗ 无法访问");
-                        task.status = PushStatus::Failed;
-                        task.last_error = Some("远程仓库无法访问".to_string());
-                        continue;
+                    pb.set_message(format!("◐ {} 推送中...", task.display_name));
+                }
+
+                // 执行推送
+                match run_git_push(&task.url, &branch, options, retry_config.timeout_secs) {
+                    Ok(_) => {
+                        pb.finish_with_message(format!("✓ {} 完成", task.display_name));
+                        total_bar.inc(1);
+                        Some(PushResult {
+                            idx,
+                            success: true,
+                            error: None,
+                        })
                     }
                     Err(e) => {
-                        println!(" ✗ 检查失败: {}", e);
-                        task.status = PushStatus::Failed;
-                        task.last_error = Some(format!("检查失败: {}", e));
-                        continue;
+                        pb.finish_with_message(format!("✗ {} 失败", task.display_name));
+                        total_bar.inc(1);
+                        Some(PushResult {
+                            idx,
+                            success: false,
+                            error: Some(e.to_string()),
+                        })
                     }
                 }
-            }
+            })
+            .collect();
 
-            // 执行推送
-            match run_git_push(&task.url, &branch, options, retry_config.timeout_secs) {
-                Ok(_) => {
-                    println!("✓ 已将本地 {} 分支成功推送至 {}", branch, task.url);
-                    task.status = PushStatus::Success;
-                    task.last_error = None;
-                }
-                Err(e) => {
-                    println!("✗ 推送至 {} 失败: {}", task.url, e);
-                    task.status = PushStatus::Failed;
-                    task.last_error = Some(e.to_string());
-                }
+        // 完成总进度条
+        total_bar.finish_with_message("推送完成");
+
+        // 更新任务状态
+        for result in results {
+            tasks[result.idx].attempts += 1;
+            if result.success {
+                tasks[result.idx].status = PushStatus::Success;
+                tasks[result.idx].last_error = None;
+            } else {
+                tasks[result.idx].status = PushStatus::Failed;
+                tasks[result.idx].last_error = result.error;
             }
         }
 
