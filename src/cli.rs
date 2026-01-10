@@ -112,9 +112,11 @@ pub enum ConfigCommands {
     /// 移除远程仓库配置
     Remove { name: String },
     /// 列出所有远程仓库
-    List,
-    /// 显示远程仓库详情
-    Show { name: Option<String> },
+    List {
+        /// 显示完整详情
+        #[arg(short = 'l', long = "long")]
+        long: bool,
+    },
     /// 导出配置到文件
     Export {
         #[arg(short = 'o', long = "output")]
