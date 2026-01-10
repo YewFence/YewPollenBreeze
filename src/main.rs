@@ -21,6 +21,7 @@ fn main() -> Result<()> {
         cli::Commands::List => commands::list(&config_path),
         cli::Commands::Show { name } => commands::show(&config_path, name),
         cli::Commands::Apply { repo } => commands::apply(&config_path, repo),
+        cli::Commands::Clean => commands::clean(),
         cli::Commands::Push {
             dry_run,
             only,

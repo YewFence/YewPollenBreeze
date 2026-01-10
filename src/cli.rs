@@ -30,6 +30,8 @@ pub enum Commands {
     Show { name: Option<String> },
     /// 将已保存的远程仓库应用到当前 git 仓库
     Apply { repo: String },
+    /// 清理本工具创建的远程仓库
+    Clean,
     /// 推送当前分支到所有已配置的远程仓库
     Push {
         #[arg(short = 'd', long = "dry-run")]
