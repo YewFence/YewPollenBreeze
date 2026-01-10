@@ -1,3 +1,4 @@
+mod edit;
 mod export;
 mod import_cmd;
 mod list;
@@ -16,5 +17,6 @@ pub fn execute(config_path: &Path, cmd: ConfigCommands) -> Result<()> {
         ConfigCommands::List { long } => list::execute(config_path, long),
         ConfigCommands::Export { output } => export::execute(config_path, output),
         ConfigCommands::Import { input, merge } => import_cmd::execute(config_path, input, merge),
+        ConfigCommands::Edit => edit::execute(config_path),
     }
 }

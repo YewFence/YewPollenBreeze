@@ -137,6 +137,8 @@ pub enum ConfigCommands {
         #[arg(short = 'm', long = "merge")]
         merge: bool,
     },
+    /// 使用默认编辑器打开配置文件
+    Edit,
 }
 
 /// Hook 管理子命令
