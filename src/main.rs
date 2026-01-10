@@ -7,6 +7,7 @@ mod utils;
 use anyhow::Result;
 use clap::Parser;
 use dotenvy::dotenv;
+use git::PushOptions;
 
 fn main() -> Result<()> {
     // 加载 .env，便于本地开发配置环境变量
@@ -26,7 +27,28 @@ fn main() -> Result<()> {
             dry_run,
             only,
             except,
-        } => commands::push(&config_path, dry_run, only, except),
+            force,
+            force_with_lease,
+            set_upstream,
+            tags,
+            git_args,
+        } => {
+            // 使用 shlex 解析每个 git_args，支持引号包裹的参数
+            let extra_args: Vec<String> = git_args
+                .iter()
+                .flat_map(|s| shlex::split(s).unwrap_or_else(|| vec![s.clone()]))
+                .collect();
+
+            let options = PushOptions {
+                force,
+                force_with_lease,
+                set_upstream,
+                tags,
+                extra_args,
+            };
+
+            commands::push(&config_path, dry_run, only, except, &options)
+        }
         cli::Commands::Export { output } => commands::export(&config_path, output),
         cli::Commands::Import { input, merge } => commands::import(&config_path, input, merge),
         cli::Commands::Status => commands::status(&config_path),

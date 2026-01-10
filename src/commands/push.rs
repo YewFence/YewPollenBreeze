@@ -1,7 +1,7 @@
 use crate::config::load_config;
 use crate::git::{
     check_git_available, check_remote_available, current_branch, ensure_git_repo, git_remote_names,
-    run_git_get_push_urls, run_git_push,
+    run_git_get_push_urls, run_git_push, PushOptions,
 };
 use anyhow::Result;
 use std::path::Path;
@@ -13,6 +13,7 @@ pub fn execute(
     dry_run: bool,
     only: Vec<String>,
     except: Vec<String>,
+    options: &PushOptions,
 ) -> Result<()> {
     check_git_available()?;
     let config = load_config(config_path)?;
@@ -106,9 +107,28 @@ pub fn execute(
         }
 
         if dry_run {
-            println!("git push {} {}", url, branch);
+            // 显示完整命令，包含额外参数
+            let mut cmd_parts = vec!["git", "push"];
+            if options.force {
+                cmd_parts.push("--force");
+            }
+            if options.force_with_lease {
+                cmd_parts.push("--force-with-lease");
+            }
+            if options.set_upstream {
+                cmd_parts.push("--set-upstream");
+            }
+            if options.tags {
+                cmd_parts.push("--tags");
+            }
+            cmd_parts.push(&url);
+            cmd_parts.push(&branch);
+            for arg in &options.extra_args {
+                cmd_parts.push(arg);
+            }
+            println!("{}", cmd_parts.join(" "));
         } else {
-            match run_git_push(&url, &branch) {
+            match run_git_push(&url, &branch, options) {
                 Ok(_) => {
                     println!(
                         "✓ 已将本地 {} 分支成功推送至 {}",

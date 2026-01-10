@@ -10,3 +10,4 @@ directories = "5.0.1"
 serde = { version = "1.0.203", features = ["derive"] }
 toml = "0.8.12"
 dotenvy = "0.15.7"
+shlex = "1.3"

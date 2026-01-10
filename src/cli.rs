@@ -47,6 +47,21 @@ pub enum Commands {
         /// 排除指定名称的仓库（可多次使用）
         #[arg(long = "except")]
         except: Vec<String>,
+        /// 强制推送（覆盖远程历史）
+        #[arg(short = 'f', long = "force")]
+        force: bool,
+        /// 安全的强制推送（推荐替代 --force）
+        #[arg(long = "force-with-lease")]
+        force_with_lease: bool,
+        /// 设置上游跟踪分支
+        #[arg(short = 'u', long = "set-upstream")]
+        set_upstream: bool,
+        /// 同时推送所有标签
+        #[arg(long = "tags")]
+        tags: bool,
+        /// 传递额外的 git 参数，可多次使用（如 --git-args="--no-verify"）
+        #[arg(long = "git-args")]
+        git_args: Vec<String>,
     },
     /// 导出配置到文件
     Export {

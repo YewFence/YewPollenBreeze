@@ -75,8 +75,42 @@ pub fn run_git_get_push_urls(name: &str) -> Result<Vec<String>> {
     Ok(output.lines().map(String::from).collect())
 }
 
-pub fn run_git_push(remote: &str, branch: &str) -> Result<()> {
-    run_git(&["push", remote, branch])
+/// 推送选项
+#[derive(Default)]
+pub struct PushOptions {
+    pub force: bool,
+    pub force_with_lease: bool,
+    pub set_upstream: bool,
+    pub tags: bool,
+    pub extra_args: Vec<String>,
+}
+
+pub fn run_git_push(remote: &str, branch: &str, options: &PushOptions) -> Result<()> {
+    let mut args = vec!["push".to_string()];
+
+    // 专用标志
+    if options.force {
+        args.push("--force".to_string());
+    }
+    if options.force_with_lease {
+        args.push("--force-with-lease".to_string());
+    }
+    if options.set_upstream {
+        args.push("--set-upstream".to_string());
+    }
+    if options.tags {
+        args.push("--tags".to_string());
+    }
+
+    // 远程和分支
+    args.push(remote.to_string());
+    args.push(branch.to_string());
+
+    // 额外参数（放在最后）
+    args.extend(options.extra_args.clone());
+
+    let args_ref: Vec<&str> = args.iter().map(|s| s.as_str()).collect();
+    run_git(&args_ref)
 }
 
 // 内部函数：执行 git 命令
