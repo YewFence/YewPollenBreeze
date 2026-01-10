@@ -9,6 +9,7 @@ pub const DEFAULT_RETRY: u32 = 3;
 pub const DEFAULT_RETRY_DELAY: u64 = 1000;
 pub const DEFAULT_PUSH_TIMEOUT: u64 = 30;
 pub const DEFAULT_CHECK_TIMEOUT: u64 = 10;
+pub const DEFAULT_ALIAS: &str = "pb";
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct Config {
@@ -32,6 +33,9 @@ pub struct Defaults {
     /// apply/check 命令超时时间（秒）
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub check_timeout: Option<u64>,
+    /// git alias 默认名称
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub alias: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

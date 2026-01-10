@@ -234,3 +234,68 @@ pub fn git_count_ahead_behind(remote_commit: &str) -> Result<(usize, usize)> {
     Ok((ahead, behind))
 }
 
+/// 获取 git config 中的 alias 值
+pub fn get_git_alias(name: &str) -> Result<Option<String>> {
+    let output = Command::new("git")
+        .args(["config", "--global", "--get", &format!("alias.{}", name)])
+        .output()
+        .context("执行 git config 失败")?;
+
+    if output.status.success() {
+        let value = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        Ok(Some(value))
+    } else {
+        // 返回码 1 表示 key 不存在，其他错误需要报告
+        if output.status.code() == Some(1) {
+            Ok(None)
+        } else {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            bail!("获取 git alias 失败: {}", stderr.trim());
+        }
+    }
+}
+
+/// 设置 git alias（覆盖模式）
+pub fn set_git_alias(name: &str, command: &str) -> Result<()> {
+    run_git(&[
+        "config",
+        "--global",
+        &format!("alias.{}", name),
+        command,
+    ])
+}
+
+/// 删除 git alias
+pub fn unset_git_alias(name: &str) -> Result<()> {
+    let output = Command::new("git")
+        .args(["config", "--global", "--unset", &format!("alias.{}", name)])
+        .output()
+        .context("执行 git config 失败")?;
+
+    if output.status.success() || output.status.code() == Some(5) {
+        // code 5 表示 key 不存在，这也是成功
+        Ok(())
+    } else {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        bail!("删除 git alias 失败: {}", stderr.trim());
+    }
+}
+
+/// 查找可执行文件的完整路径
+pub fn which_command(cmd: &str) -> Result<Option<String>> {
+    let output = Command::new(if cfg!(windows) { "where" } else { "which" })
+        .arg(cmd)
+        .output()
+        .context("查找命令路径失败")?;
+
+    if output.status.success() {
+        let path = String::from_utf8_lossy(&output.stdout)
+            .lines()
+            .next()
+            .map(|s| s.trim().to_string());
+        Ok(path)
+    } else {
+        Ok(None)
+    }
+}
+

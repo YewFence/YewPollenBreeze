@@ -1,4 +1,5 @@
 mod add;
+mod alias;
 mod apply;
 mod check;
 mod clean;
@@ -11,6 +12,7 @@ mod show;
 mod status;
 
 pub use add::execute as add;
+pub use alias::execute as alias;
 pub use apply::execute as apply;
 pub use check::execute as check;
 pub use clean::execute as clean;

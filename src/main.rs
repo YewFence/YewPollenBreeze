@@ -82,5 +82,8 @@ fn main() -> Result<()> {
                 .unwrap_or(config::DEFAULT_CHECK_TIMEOUT);
             commands::check(&config_path, timeout)
         }
+        cli::Commands::Alias { name, remove, show } => {
+            commands::alias(&config_path, name, remove, show)
+        }
     }
 }

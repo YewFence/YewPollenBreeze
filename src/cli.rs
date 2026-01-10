@@ -105,4 +105,16 @@ pub enum Commands {
         #[arg(long = "timeout")]
         timeout: Option<u64>,
     },
+    /// 管理 git alias，将本工具注册为 git 子命令
+    Alias {
+        /// 别名名称（默认为 "pb" 或配置中的值）
+        #[arg(short = 'n', long = "name")]
+        name: Option<String>,
+        /// 删除别名
+        #[arg(short = 'r', long = "remove")]
+        remove: bool,
+        /// 显示别名状态
+        #[arg(short = 's', long = "show")]
+        show: bool,
+    },
 }
