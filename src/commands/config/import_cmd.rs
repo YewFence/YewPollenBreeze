@@ -24,7 +24,10 @@ pub fn execute(config_path: &Path, input: Option<PathBuf>, merge: bool) -> Resul
                 println!();
                 println!("用法: pb config import -i <文件路径>");
                 println!();
-                println!("提示: 当前目录下未找到 {} 文件。", CANDIDATE_FILES.join(" 或 "));
+                println!(
+                    "提示: 当前目录下未找到 {} 文件。",
+                    CANDIDATE_FILES.join(" 或 ")
+                );
                 return Ok(());
             } else if candidates.len() == 1 {
                 let file = &candidates[0];

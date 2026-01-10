@@ -1,7 +1,8 @@
 use crate::config::load_config;
 use crate::git::{
     check_git_available, check_remote_available, ensure_git_repo, git_remote_names,
-    run_git_add_push_url, run_git_add_remote, run_git_get_remote_url, run_git_remote_remove,
+    install_pre_push_hook, is_push_backup_hook_installed, run_git_add_push_url, run_git_add_remote,
+    run_git_get_remote_url, run_git_remote_remove,
 };
 use crate::utils::build_remote_url;
 use anyhow::Result;
@@ -11,7 +12,14 @@ use std::path::Path;
 
 const REMOTE_NAME: &str = "push-backup";
 
-pub fn execute(config_path: &Path, repo: Option<String>, yes: bool, timeout: u64, dry_run: bool) -> Result<()> {
+pub fn execute(
+    config_path: &Path,
+    repo: Option<String>,
+    yes: bool,
+    timeout: u64,
+    dry_run: bool,
+    no_hook: bool,
+) -> Result<()> {
     check_git_available()?;
     let config = load_config(config_path)?;
     if config.remotes.is_empty() {
@@ -113,7 +121,10 @@ pub fn execute(config_path: &Path, repo: Option<String>, yes: bool, timeout: u64
     // 使用第一个 URL 作为 fetch URL
     if let Some((_, first_url)) = remote_urls.first() {
         if dry_run {
-            println!("[dry-run] 将执行: git remote add {} {}", REMOTE_NAME, first_url);
+            println!(
+                "[dry-run] 将执行: git remote add {} {}",
+                REMOTE_NAME, first_url
+            );
         } else {
             run_git_add_remote(REMOTE_NAME, first_url)?;
             println!("已配置统一远程仓库: {}", REMOTE_NAME);
@@ -123,7 +134,10 @@ pub fn execute(config_path: &Path, repo: Option<String>, yes: bool, timeout: u64
     // 4. 添加所有 push URL 并检查可用性
     for (name, url) in remote_urls {
         if dry_run {
-            println!("[dry-run] 将执行: git remote set-url --add --push {} {}", REMOTE_NAME, url);
+            println!(
+                "[dry-run] 将执行: git remote set-url --add --push {} {}",
+                REMOTE_NAME, url
+            );
         } else {
             // 添加 push URL
             run_git_add_push_url(REMOTE_NAME, &url)?;
@@ -135,6 +149,47 @@ pub fn execute(config_path: &Path, repo: Option<String>, yes: bool, timeout: u64
                 Ok(false) => println!(" ✗ 无法访问（可能需要配置认证或网络不通）"),
                 Err(e) => println!(" ✗ 检查失败: {}", e),
             }
+        }
+    }
+
+    // Hook 安装逻辑
+    if !dry_run {
+        let should_install_hook = if no_hook {
+            // 明确指定 --no-hook，跳过安装
+            false
+        } else if yes {
+            // -y 模式下默认安装 hook
+            true
+        } else {
+            // 交互式询问（默认 Y）
+            println!();
+            print!("是否安装 pre-push hook 以自动同步到所有远程? (Y/n) ");
+            io::stdout().flush()?;
+
+            let mut input = String::new();
+            io::stdin().read_line(&mut input)?;
+            let input = input.trim();
+            // 默认为 Y，只有明确输入 n/N 才跳过
+            !input.eq_ignore_ascii_case("n")
+        };
+
+        if should_install_hook {
+            println!();
+            let already_installed = is_push_backup_hook_installed().unwrap_or(false);
+            if already_installed {
+                println!("pre-push hook 已存在，跳过安装");
+            } else {
+                match install_pre_push_hook() {
+                    Ok(_) => {
+                        println!("pre-push hook 已成功安装");
+                        println!("现在推送到 origin 时会自动同步到所有配置的远程仓库");
+                    }
+                    Err(e) => println!("hook 安装失败: {}", e),
+                }
+            }
+            println!();
+            println!("提示: 可通过环境变量临时禁用 hook: PUSH_BACKUP_SKIP_HOOK=1 git push");
+            println!("提示: 卸载 hook 请运行: push-backup hook uninstall");
         }
     }
 

@@ -1,6 +1,6 @@
 use anyhow::{bail, Context, Result};
 use std::collections::HashSet;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::time::Duration;
 use wait_timeout::ChildExt;
@@ -257,12 +257,7 @@ pub fn get_git_alias(name: &str) -> Result<Option<String>> {
 
 /// 设置 git alias（覆盖模式）
 pub fn set_git_alias(name: &str, command: &str) -> Result<()> {
-    run_git(&[
-        "config",
-        "--global",
-        &format!("alias.{}", name),
-        command,
-    ])
+    run_git(&["config", "--global", &format!("alias.{}", name), command])
 }
 
 /// 删除 git alias
@@ -299,3 +294,167 @@ pub fn which_command(cmd: &str) -> Result<Option<String>> {
     }
 }
 
+// ============================================================================
+// Git Hook 相关函数
+// ============================================================================
+
+const HOOK_START_MARKER: &str = "# === push-backup-hook-start ===";
+const HOOK_END_MARKER: &str = "# === push-backup-hook-end ===";
+
+/// 编译时嵌入的 hook 脚本内容
+const HOOK_SCRIPT_TEMPLATE: &str = include_str!("scripts/pre-push.sh");
+
+/// 获取当前 git 仓库的 hooks 目录路径
+pub fn get_hooks_dir() -> Result<PathBuf> {
+    let git_dir = run_git_capture(&["rev-parse", "--git-dir"])?;
+    Ok(PathBuf::from(git_dir.trim()).join("hooks"))
+}
+
+/// 检查 pre-push hook 是否存在
+pub fn has_pre_push_hook() -> Result<bool> {
+    let hooks_dir = get_hooks_dir()?;
+    let hook_path = hooks_dir.join("pre-push");
+    Ok(hook_path.exists())
+}
+
+/// 检查 pre-push hook 是否由本工具安装
+pub fn is_push_backup_hook_installed() -> Result<bool> {
+    let hooks_dir = get_hooks_dir()?;
+    let hook_path = hooks_dir.join("pre-push");
+
+    if !hook_path.exists() {
+        return Ok(false);
+    }
+
+    let content = std::fs::read_to_string(&hook_path).context("读取 pre-push hook 失败")?;
+
+    Ok(content.contains(HOOK_START_MARKER))
+}
+
+/// 获取 pre-push hook 文件路径
+pub fn get_pre_push_hook_path() -> Result<PathBuf> {
+    let hooks_dir = get_hooks_dir()?;
+    Ok(hooks_dir.join("pre-push"))
+}
+
+/// 安装 pre-push hook
+pub fn install_pre_push_hook() -> Result<()> {
+    let hooks_dir = get_hooks_dir()?;
+    let hook_path = hooks_dir.join("pre-push");
+
+    // 确保 hooks 目录存在
+    std::fs::create_dir_all(&hooks_dir).context("创建 hooks 目录失败")?;
+
+    let hook_section = get_hook_section();
+
+    if hook_path.exists() {
+        // 已有 hook，处理追加/更新
+        let existing_content = std::fs::read_to_string(&hook_path).context("读取现有 hook 失败")?;
+
+        if existing_content.contains(HOOK_START_MARKER) {
+            // 已安装，替换更新
+            let updated = remove_hook_section(&existing_content);
+            let new_content = if updated.trim().is_empty() {
+                // 只剩我们的部分，需要添加 shebang
+                format!("#!/bin/sh\n\n{}", hook_section)
+            } else if has_valid_shebang(updated.trim()) {
+                // 原有内容已有 shebang，直接追加
+                format!("{}\n\n{}", updated.trim(), hook_section)
+            } else {
+                // 原有内容没有 shebang，添加一个
+                format!("#!/bin/sh\n\n{}\n\n{}", updated.trim(), hook_section)
+            };
+            std::fs::write(&hook_path, new_content).context("更新 hook 失败")?;
+        } else {
+            // 追加到末尾
+            let new_content = if has_valid_shebang(&existing_content) {
+                format!("{}\n\n{}", existing_content.trim(), hook_section)
+            } else {
+                format!("#!/bin/sh\n\n{}\n\n{}", existing_content.trim(), hook_section)
+            };
+            std::fs::write(&hook_path, new_content).context("追加 hook 失败")?;
+        }
+    } else {
+        // 新建，添加 shebang
+        let new_content = format!("#!/bin/sh\n\n{}", hook_section);
+        std::fs::write(&hook_path, new_content).context("创建 hook 失败")?;
+    }
+
+    // 设置可执行权限（Unix/Linux/macOS）
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let mut perms = std::fs::metadata(&hook_path)?.permissions();
+        perms.set_mode(0o755);
+        std::fs::set_permissions(&hook_path, perms)?;
+    }
+
+    Ok(())
+}
+
+/// 卸载 pre-push hook
+pub fn uninstall_pre_push_hook() -> Result<()> {
+    let hooks_dir = get_hooks_dir()?;
+    let hook_path = hooks_dir.join("pre-push");
+
+    if !hook_path.exists() {
+        return Ok(());
+    }
+
+    let content = std::fs::read_to_string(&hook_path).context("读取 hook 失败")?;
+
+    if !content.contains(HOOK_START_MARKER) {
+        bail!("pre-push hook 不是由本工具安装，拒绝删除");
+    }
+
+    let updated = remove_hook_section(&content);
+
+    if updated.trim().is_empty() {
+        // 移除整个文件
+        std::fs::remove_file(&hook_path).context("删除 hook 文件失败")?;
+    } else {
+        // 只移除我们的部分
+        std::fs::write(&hook_path, format!("{}\n", updated.trim()))
+            .context("更新 hook 文件失败")?;
+    }
+
+    Ok(())
+}
+
+/// 移除 hook 脚本中的 push-backup 部分
+fn remove_hook_section(content: &str) -> String {
+    let lines: Vec<&str> = content.lines().collect();
+    let mut result = Vec::new();
+    let mut in_section = false;
+
+    for line in lines {
+        if line.contains(HOOK_START_MARKER) {
+            in_section = true;
+            continue;
+        }
+        if line.contains(HOOK_END_MARKER) {
+            in_section = false;
+            continue;
+        }
+        if !in_section {
+            result.push(line);
+        }
+    }
+
+    result.join("\n")
+}
+
+/// 获取 hook 脚本段落（带标记，不含 shebang）
+fn get_hook_section() -> String {
+    format!(
+        "{}\n{}\n{}",
+        HOOK_START_MARKER,
+        HOOK_SCRIPT_TEMPLATE.trim(),
+        HOOK_END_MARKER
+    )
+}
+
+/// 检查内容是否以有效的 shebang 开头
+fn has_valid_shebang(content: &str) -> bool {
+    content.starts_with("#!")
+}

@@ -1,14 +1,11 @@
 use crate::config::{load_config, DEFAULT_ALIAS};
-use crate::git::{check_git_available, get_git_alias, set_git_alias, unset_git_alias, which_command};
+use crate::git::{
+    check_git_available, get_git_alias, set_git_alias, unset_git_alias, which_command,
+};
 use anyhow::Result;
 use std::path::Path;
 
-pub fn execute(
-    config_path: &Path,
-    name: Option<String>,
-    remove: bool,
-    show: bool,
-) -> Result<()> {
+pub fn execute(config_path: &Path, name: Option<String>, remove: bool, show: bool) -> Result<()> {
     check_git_available()?;
 
     // 确定要使用的别名名称
@@ -37,10 +34,7 @@ fn show_alias_status(name: &str) -> Result<()> {
             if value.contains("push-backup") {
                 println!("别名 'git {}' 已配置，指向: {}", name, value);
             } else {
-                println!(
-                    "别名 'git {}' 已存在，但不是由本工具创建: {}",
-                    name, value
-                );
+                println!("别名 'git {}' 已存在，但不是由本工具创建: {}", name, value);
             }
         }
         None => {

@@ -1,7 +1,7 @@
 use crate::config::load_config;
 use crate::git::{
-    check_git_available, check_remote_available, current_branch, ensure_git_repo,
-    git_remote_names, run_git_get_push_urls, run_git_push, PushOptions, RetryConfig,
+    check_git_available, check_remote_available, current_branch, ensure_git_repo, git_remote_names,
+    run_git_get_push_urls, run_git_push, PushOptions, RetryConfig,
 };
 use anyhow::Result;
 use std::path::Path;
@@ -186,10 +186,7 @@ pub fn execute(
             // 执行推送
             match run_git_push(&task.url, &branch, options, retry_config.timeout_secs) {
                 Ok(_) => {
-                    println!(
-                        "✓ 已将本地 {} 分支成功推送至 {}",
-                        branch, task.url
-                    );
+                    println!("✓ 已将本地 {} 分支成功推送至 {}", branch, task.url);
                     task.status = PushStatus::Success;
                     task.last_error = None;
                 }
@@ -211,10 +208,7 @@ pub fn execute(
 }
 
 /// 匹配 URL 对应的显示名称
-fn match_display_name(
-    url: &str,
-    config_remotes: &[crate::config::Remote],
-) -> String {
+fn match_display_name(url: &str, config_remotes: &[crate::config::Remote]) -> String {
     for remote in config_remotes {
         if url.starts_with(&remote.base) {
             let remainder = &url[remote.base.len()..];
@@ -234,8 +228,7 @@ fn match_display_name(
 /// 判断是否应该推送到该仓库
 fn should_push(url: &str, display_name: &str, only: &[String], except: &[String]) -> bool {
     // only 过滤
-    if !only.is_empty()
-        && (display_name == "未命名" || !only.contains(&display_name.to_string()))
+    if !only.is_empty() && (display_name == "未命名" || !only.contains(&display_name.to_string()))
     {
         return false;
     }
@@ -254,8 +247,14 @@ fn should_push(url: &str, display_name: &str, only: &[String], except: &[String]
 
 /// 输出推送汇总
 fn print_summary(tasks: &[PushTask], max_retries: u32) {
-    let success: Vec<&PushTask> = tasks.iter().filter(|t| t.status == PushStatus::Success).collect();
-    let failed: Vec<&PushTask> = tasks.iter().filter(|t| t.status != PushStatus::Success).collect();
+    let success: Vec<&PushTask> = tasks
+        .iter()
+        .filter(|t| t.status == PushStatus::Success)
+        .collect();
+    let failed: Vec<&PushTask> = tasks
+        .iter()
+        .filter(|t| t.status != PushStatus::Success)
+        .collect();
 
     println!("\n========== 推送汇总 ==========");
     println!("成功: {} 个", success.len());

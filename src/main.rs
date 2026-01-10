@@ -18,12 +18,18 @@ fn main() -> Result<()> {
 
     match cli.command {
         cli::Commands::Config { command } => commands::config(&config_path, command),
-        cli::Commands::Apply { repo, yes, timeout, dry_run } => {
+        cli::Commands::Apply {
+            repo,
+            yes,
+            timeout,
+            dry_run,
+            no_hook,
+        } => {
             let cfg = config::load_config(&config_path)?;
             let timeout = timeout
                 .or(cfg.defaults.check_timeout)
                 .unwrap_or(config::DEFAULT_CHECK_TIMEOUT);
-            commands::apply(&config_path, repo, yes, timeout, dry_run)
+            commands::apply(&config_path, repo, yes, timeout, dry_run, no_hook)
         }
         cli::Commands::Clean { dry_run } => commands::clean(dry_run),
         cli::Commands::Push {
@@ -67,7 +73,15 @@ fn main() -> Result<()> {
                     .unwrap_or(config::DEFAULT_PUSH_TIMEOUT),
             };
 
-            commands::push(&config_path, dry_run, only, except, &options, &retry_config, skip_check)
+            commands::push(
+                &config_path,
+                dry_run,
+                only,
+                except,
+                &options,
+                &retry_config,
+                skip_check,
+            )
         }
         cli::Commands::Status => commands::status(&config_path),
         cli::Commands::Check { timeout } => {
@@ -80,5 +94,10 @@ fn main() -> Result<()> {
         cli::Commands::Alias { name, remove, show } => {
             commands::alias(&config_path, name, remove, show)
         }
+        cli::Commands::Hook { command } => match command {
+            cli::HookCommands::Install { yes } => commands::hook::execute_install(yes),
+            cli::HookCommands::Uninstall { yes } => commands::hook::execute_uninstall(yes),
+            cli::HookCommands::Status => commands::hook::execute_status(),
+        },
     }
 }

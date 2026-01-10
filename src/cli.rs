@@ -31,6 +31,9 @@ pub enum Commands {
         /// 仅显示将要执行的操作，不实际修改
         #[arg(short = 'd', long = "dry-run")]
         dry_run: bool,
+        /// 不安装 pre-push hook
+        #[arg(long = "no-hook")]
+        no_hook: bool,
     },
     /// 清理本工具创建的远程仓库
     Clean {
@@ -96,6 +99,11 @@ pub enum Commands {
         #[arg(short = 's', long = "show")]
         show: bool,
     },
+    /// 管理 git pre-push hook
+    Hook {
+        #[command(subcommand)]
+        command: HookCommands,
+    },
 }
 
 /// 配置相关的子命令
@@ -129,4 +137,23 @@ pub enum ConfigCommands {
         #[arg(short = 'm', long = "merge")]
         merge: bool,
     },
+}
+
+/// Hook 管理子命令
+#[derive(Subcommand)]
+pub enum HookCommands {
+    /// 安装 pre-push hook，推送到 origin 时自动同步到所有远程
+    Install {
+        /// 自动确认，不询问
+        #[arg(short = 'y', long = "yes")]
+        yes: bool,
+    },
+    /// 卸载 pre-push hook
+    Uninstall {
+        /// 自动确认，不询问
+        #[arg(short = 'y', long = "yes")]
+        yes: bool,
+    },
+    /// 查看 hook 安装状态
+    Status,
 }

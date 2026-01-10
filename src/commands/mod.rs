@@ -3,6 +3,7 @@ mod apply;
 mod check;
 mod clean;
 pub mod config;
+pub mod hook;
 mod push;
 mod status;
 
