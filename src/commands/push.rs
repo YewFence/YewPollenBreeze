@@ -90,7 +90,7 @@ pub fn execute(
             for arg in &options.extra_args {
                 cmd_parts.push(arg);
             }
-            println!("{}", cmd_parts.join(" "));
+            println!("[dry-run] 将执行: {}", cmd_parts.join(" "));
         }
         return Ok(());
     }

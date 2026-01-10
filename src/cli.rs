@@ -37,9 +37,16 @@ pub enum Commands {
         /// 连接检查超时时间（秒）
         #[arg(long = "timeout")]
         timeout: Option<u64>,
+        /// 仅显示将要执行的操作，不实际修改
+        #[arg(short = 'd', long = "dry-run")]
+        dry_run: bool,
     },
     /// 清理本工具创建的远程仓库
-    Clean,
+    Clean {
+        /// 仅显示将要执行的操作，不实际修改
+        #[arg(short = 'd', long = "dry-run")]
+        dry_run: bool,
+    },
     /// 推送当前分支到所有已配置的远程仓库
     Push {
         #[arg(short = 'd', long = "dry-run")]

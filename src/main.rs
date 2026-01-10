@@ -21,14 +21,14 @@ fn main() -> Result<()> {
         cli::Commands::Remove { name } => commands::remove(&config_path, name),
         cli::Commands::List => commands::list(&config_path),
         cli::Commands::Show { name } => commands::show(&config_path, name),
-        cli::Commands::Apply { repo, yes, timeout } => {
+        cli::Commands::Apply { repo, yes, timeout, dry_run } => {
             let cfg = config::load_config(&config_path)?;
             let timeout = timeout
                 .or(cfg.defaults.check_timeout)
                 .unwrap_or(config::DEFAULT_CHECK_TIMEOUT);
-            commands::apply(&config_path, repo, yes, timeout)
+            commands::apply(&config_path, repo, yes, timeout, dry_run)
         }
-        cli::Commands::Clean => commands::clean(),
+        cli::Commands::Clean { dry_run } => commands::clean(dry_run),
         cli::Commands::Push {
             dry_run,
             only,

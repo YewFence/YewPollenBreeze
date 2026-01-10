@@ -11,7 +11,7 @@ use std::path::Path;
 
 const REMOTE_NAME: &str = "push-backup";
 
-pub fn execute(config_path: &Path, repo: Option<String>, yes: bool, timeout: u64) -> Result<()> {
+pub fn execute(config_path: &Path, repo: Option<String>, yes: bool, timeout: u64, dry_run: bool) -> Result<()> {
     check_git_available()?;
     let config = load_config(config_path)?;
     if config.remotes.is_empty() {
@@ -84,14 +84,22 @@ pub fn execute(config_path: &Path, repo: Option<String>, yes: bool, timeout: u64
     // 1. 清理旧的独立远程仓库（如果存在）
     for remote in &config.remotes {
         if existing.contains(&remote.name) && remote.name != REMOTE_NAME {
-            run_git_remote_remove(&remote.name)?;
-            println!("已清理旧远程仓库: {}", remote.name);
+            if dry_run {
+                println!("[dry-run] 将执行: git remote remove {}", remote.name);
+            } else {
+                run_git_remote_remove(&remote.name)?;
+                println!("已清理旧远程仓库: {}", remote.name);
+            }
         }
     }
 
     // 2. 重置 push-backup 远程仓库
     if existing.contains(REMOTE_NAME) {
-        run_git_remote_remove(REMOTE_NAME)?;
+        if dry_run {
+            println!("[dry-run] 将执行: git remote remove {}", REMOTE_NAME);
+        } else {
+            run_git_remote_remove(REMOTE_NAME)?;
+        }
     }
 
     // 计算所有 URL
@@ -104,21 +112,29 @@ pub fn execute(config_path: &Path, repo: Option<String>, yes: bool, timeout: u64
     // 3. 创建 push-backup 远程仓库
     // 使用第一个 URL 作为 fetch URL
     if let Some((_, first_url)) = remote_urls.first() {
-        run_git_add_remote(REMOTE_NAME, first_url)?;
-        println!("已配置统一远程仓库: {}", REMOTE_NAME);
+        if dry_run {
+            println!("[dry-run] 将执行: git remote add {} {}", REMOTE_NAME, first_url);
+        } else {
+            run_git_add_remote(REMOTE_NAME, first_url)?;
+            println!("已配置统一远程仓库: {}", REMOTE_NAME);
+        }
     }
 
     // 4. 添加所有 push URL 并检查可用性
     for (name, url) in remote_urls {
-        // 添加 push URL
-        run_git_add_push_url(REMOTE_NAME, &url)?;
+        if dry_run {
+            println!("[dry-run] 将执行: git remote set-url --add --push {} {}", REMOTE_NAME, url);
+        } else {
+            // 添加 push URL
+            run_git_add_push_url(REMOTE_NAME, &url)?;
 
-        // 检查可用性 (使用 URL 进行检查)
-        print!("检查远程仓库 '{}' ({}) 的可用性...", name, url);
-        match check_remote_available(&url, timeout) {
-            Ok(true) => println!(" ✓ 可访问"),
-            Ok(false) => println!(" ✗ 无法访问（可能需要配置认证或网络不通）"),
-            Err(e) => println!(" ✗ 检查失败: {}", e),
+            // 检查可用性 (使用 URL 进行检查)
+            print!("检查远程仓库 '{}' ({}) 的可用性...", name, url);
+            match check_remote_available(&url, timeout) {
+                Ok(true) => println!(" ✓ 可访问"),
+                Ok(false) => println!(" ✗ 无法访问（可能需要配置认证或网络不通）"),
+                Err(e) => println!(" ✗ 检查失败: {}", e),
+            }
         }
     }
 
