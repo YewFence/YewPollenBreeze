@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 #[derive(Parser)]
 #[command(
-    name = "push-backup",
+    name = "yewpb",
     version,
     about = "保存多个 git 远程地址，并应用到当前仓库"
 )]

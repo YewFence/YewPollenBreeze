@@ -28,7 +28,7 @@ pub fn execute_install(yes: bool) -> Result<()> {
         }
     } else if has_hook {
         println!("检测到已存在 pre-push hook");
-        println!("push-backup hook 将被追加到现有 hook 之后");
+        println!("yewpb hook 将被追加到现有 hook 之后");
         if !yes {
             print!("是否继续? (y/n) ");
             io::stdout().flush()?;
@@ -49,7 +49,7 @@ pub fn execute_install(yes: bool) -> Result<()> {
     println!("位置: {}", hook_path.display());
     println!();
     println!("现在推送到 origin 时会自动同步到所有配置的远程仓库");
-    println!("提示: 可通过环境变量临时禁用: PUSH_BACKUP_SKIP_HOOK=1 git push");
+    println!("提示: 可通过环境变量临时禁用: YEWPB_SKIP_HOOK=1 git push");
 
     Ok(())
 }
@@ -93,18 +93,18 @@ pub fn execute_status() -> Result<()> {
         println!("状态: pre-push hook 未安装");
         println!("位置: {}", hook_path.display());
         println!();
-        println!("运行 'push-backup hook install' 安装 hook");
+        println!("运行 'yewpb hook install' 安装 hook");
     } else if is_push_backup_hook_installed()? {
-        println!("状态: push-backup hook 已安装");
+        println!("状态: yewpb hook 已安装");
         println!("位置: {}", hook_path.display());
         println!();
         println!("推送到 origin 时会自动同步到所有远程仓库");
-        println!("可通过环境变量临时禁用: PUSH_BACKUP_SKIP_HOOK=1 git push");
+        println!("可通过环境变量临时禁用: YEWPB_SKIP_HOOK=1 git push");
     } else {
         println!("状态: pre-push hook 存在但不是由本工具安装");
         println!("位置: {}", hook_path.display());
         println!();
-        println!("运行 'push-backup hook install' 将追加 push-backup hook 到现有 hook");
+        println!("运行 'yewpb hook install' 将追加 yewpb hook 到现有 hook");
     }
 
     Ok(())

@@ -10,7 +10,7 @@ use std::env;
 use std::io::{self, Write};
 use std::path::Path;
 
-const REMOTE_NAME: &str = "push-backup";
+const REMOTE_NAME: &str = "yewpb";
 
 pub fn execute(
     config_path: &Path,
@@ -36,7 +36,7 @@ pub fn execute(
             let mut detected_name = None;
 
             // 1. 尝试从现有 remote 推断
-            // 优先查找 origin，否则取任意一个非 push-backup 的 remote
+            // 优先查找 origin，否则取任意一个非 yewpb 的 remote
             let remote_candidate = if existing.contains("origin") {
                 Some("origin")
             } else {
@@ -72,7 +72,7 @@ pub fn execute(
 
             println!("检测到仓库名称为: {}", name);
             if !yes {
-                println!("提示: 你也可以通过 'push-backup apply <name>' 手动指定名称");
+                println!("提示: 你也可以通过 'yewpb apply <name>' 手动指定名称");
                 print!("确认使用此名称吗? (y/n) ");
                 io::stdout().flush()?;
 
@@ -101,7 +101,7 @@ pub fn execute(
         }
     }
 
-    // 2. 重置 push-backup 远程仓库
+    // 2. 重置 yewpb 远程仓库
     if existing.contains(REMOTE_NAME) {
         if dry_run {
             println!("[dry-run] 将执行: git remote remove {}", REMOTE_NAME);
@@ -117,7 +117,7 @@ pub fn execute(
         remote_urls.push((remote.name.clone(), url));
     }
 
-    // 3. 创建 push-backup 远程仓库
+    // 3. 创建 yewpb 远程仓库
     // 使用第一个 URL 作为 fetch URL
     if let Some((_, first_url)) = remote_urls.first() {
         if dry_run {
@@ -188,8 +188,8 @@ pub fn execute(
                 }
             }
             println!();
-            println!("提示: 可通过环境变量临时禁用 hook: PUSH_BACKUP_SKIP_HOOK=1 git push");
-            println!("提示: 卸载 hook 请运行: push-backup hook uninstall");
+            println!("提示: 可通过环境变量临时禁用 hook: YEWPB_SKIP_HOOK=1 git push");
+            println!("提示: 卸载 hook 请运行: yewpb hook uninstall");
         }
     }
 

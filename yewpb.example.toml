@@ -1,4 +1,4 @@
-# push-backup 配置文件示例
+# yewpb 配置文件示例
 
 # 远程仓库配置
 # 每个 [[remotes]] 块定义一个 git 托管平台

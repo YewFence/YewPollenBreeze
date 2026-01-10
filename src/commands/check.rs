@@ -6,17 +6,17 @@ use crate::git::{
 use anyhow::Result;
 use std::path::Path;
 
-const REMOTE_NAME: &str = "push-backup";
+const REMOTE_NAME: &str = "yewpb";
 
 pub fn execute(config_path: &Path, timeout: u64) -> Result<()> {
     check_git_available()?;
     ensure_git_repo()?;
 
-    // 检查 push-backup 远程是否存在
+    // 检查 yewpb 远程是否存在
     let remotes = git_remote_names()?;
     if !remotes.contains(REMOTE_NAME) {
-        println!("错误: 未找到 push-backup 远程仓库。");
-        println!("提示: 请先运行 `push-backup apply` 应用配置。");
+        println!("错误: 未找到 yewpb 远程仓库。");
+        println!("提示: 请先运行 `yewpb apply` 应用配置。");
         return Ok(());
     }
 

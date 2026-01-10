@@ -1,7 +1,7 @@
 use crate::git::{check_git_available, ensure_git_repo, git_remote_names, run_git_remote_remove};
 use anyhow::Result;
 
-const REMOTE_NAME: &str = "push-backup";
+const REMOTE_NAME: &str = "yewpb";
 
 pub fn execute(dry_run: bool) -> Result<()> {
     check_git_available()?;

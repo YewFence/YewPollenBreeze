@@ -3,7 +3,7 @@ use anyhow::{bail, Result};
 use std::path::{Path, PathBuf};
 
 /// 候选配置文件名
-const CANDIDATE_FILES: &[&str] = &["config.toml", "push-backup.toml"];
+const CANDIDATE_FILES: &[&str] = &["config.toml", "yewpb.toml"];
 
 /// 查找当前目录下的候选配置文件
 fn find_candidate_files() -> Vec<PathBuf> {

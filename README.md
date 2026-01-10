@@ -1,4 +1,4 @@
-# push-backup
+# YewPollenBreeze
 
 一个小巧的 Rust CLI：保存多个 git 托管平台的基础 URL，然后一键把当前仓库的 remotes 配好，还能把当前分支一次性推到所有 remote。
 
@@ -14,20 +14,20 @@
 ### 1) 保存平台基础 URL
 
 ```bash
-cargo run -- add github git@github.com:your-name
-cargo run -- add gitee git@gitee.com:your-name
+yewpb config set github git@github.com:your-name
+yewpb config set gitee git@gitee.com:your-name
 ```
 
 ### 2) 查看已保存的 remote
 
 ```bash
-cargo run -- list
+yewpb config list
 ```
 
 ### 3) 把 remotes 应用到当前仓库
 
 ```bash
-cargo run -- apply repo-name
+yewpb apply repo-name
 ```
 
 比如当前仓库名是 `demo`，以上配置会生成：
@@ -40,13 +40,13 @@ git@gitee.com:your-name/demo.git
 ### 4) 推送当前分支到所有 remote
 
 ```bash
-cargo run -- push
+yewpb push
 ```
 
 只看执行计划（不真正推送）：
 
 ```bash
-cargo run -- push -d
+yewpb push -d
 ```
 
 ## 配置文件
@@ -60,12 +60,12 @@ config.toml
 在 Windows 下通常是：
 
 ```
-C:\Users\<你的用户名>\AppData\Roaming\push-backup\push-backup\config.toml
+C:\Users\<你的用户名>\AppData\Roaming\yewfence\yewpb\config.toml
 ```
 
 ### 开发环境配置
 
-在开发环境下（设置 `PUSH_BACKUP_ENV=dev`），配置文件会保存在项目根目录：
+在开发环境下（设置 `YEWPB_ENV=dev`），配置文件会保存在项目根目录：
 
 ```
 <项目根目录>/.dev/config.toml
@@ -78,7 +78,7 @@ C:\Users\<你的用户名>\AppData\Roaming\push-backup\push-backup\config.toml
 支持从当前目录的 `.env` 加载环境变量，示例见 `.env.example`。
 
 ```bash
-PUSH_BACKUP_ENV=dev
+YEWPB_ENV=dev
 ```
 
 ## 常见提示

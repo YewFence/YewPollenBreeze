@@ -10,7 +10,7 @@ use std::path::Path;
 use std::thread;
 use std::time::Duration;
 
-const REMOTE_NAME: &str = "push-backup";
+const REMOTE_NAME: &str = "yewpb";
 
 /// 单个仓库的推送任务
 struct PushTask {

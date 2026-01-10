@@ -49,7 +49,7 @@ pub struct Remote {
 pub fn config_path() -> Result<PathBuf> {
     // 计算配置文件路径
     // 开发环境下将配置存到项目根目录的 .dev 文件夹
-    if std::env::var("PUSH_BACKUP_ENV")
+    if std::env::var("YEWPB_ENV")
         .map(|value| value.eq_ignore_ascii_case("dev"))
         .unwrap_or(false)
     {
@@ -59,7 +59,7 @@ pub fn config_path() -> Result<PathBuf> {
 
     // 使用系统推荐的配置目录，避免污染项目仓库
     let project_dirs =
-        ProjectDirs::from("com", "push-backup", "push-backup").context("获取配置目录失败")?;
+        ProjectDirs::from("com", "yewfence", "yewpb").context("获取配置目录失败")?;
     Ok(project_dirs.config_dir().join("config.toml"))
 }
 

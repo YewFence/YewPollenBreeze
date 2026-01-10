@@ -11,7 +11,7 @@ pub fn execute(config_path: &Path, output: Option<PathBuf>) -> Result<()> {
 
     let export_path = match output {
         Some(path) => path,
-        None => PathBuf::from("push-backup-config.toml"),
+        None => PathBuf::from("yewpb-config.toml"),
     };
 
     save_config(&export_path, &config)?;

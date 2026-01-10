@@ -31,7 +31,7 @@ pub fn execute(config_path: &Path, name: Option<String>, remove: bool, show: boo
 fn show_alias_status(name: &str) -> Result<()> {
     match get_git_alias(name)? {
         Some(value) => {
-            if value.contains("push-backup") {
+            if value.contains("yewpb") {
                 println!("别名 'git {}' 已配置，指向: {}", name, value);
             } else {
                 println!("别名 'git {}' 已存在，但不是由本工具创建: {}", name, value);
@@ -49,7 +49,7 @@ fn remove_alias(name: &str) -> Result<()> {
     match get_git_alias(name)? {
         Some(value) => {
             // 检查是否是我们创建的别名
-            if !value.contains("push-backup") {
+            if !value.contains("yewpb") {
                 println!("警告: 别名 'git {}' 不是由本工具创建，仍将删除", name);
             }
             unset_git_alias(name)?;
@@ -63,8 +63,8 @@ fn remove_alias(name: &str) -> Result<()> {
 }
 
 fn install_alias(name: &str) -> Result<()> {
-    // 查找 push-backup 的完整路径
-    let cmd_path = which_command("push-backup")?;
+    // 查找 yewpb 的完整路径
+    let cmd_path = which_command("yewpb")?;
 
     // 构建 alias 命令
     // 使用 ! 前缀让 git 把它当作 shell 命令执行
@@ -81,7 +81,7 @@ fn install_alias(name: &str) -> Result<()> {
         None => {
             // 如果找不到完整路径，直接使用命令名
             // 假设它在 PATH 中
-            "!push-backup".to_string()
+            "!yewpb".to_string()
         }
     };
 
@@ -96,7 +96,7 @@ fn install_alias(name: &str) -> Result<()> {
 
     set_git_alias(name, &alias_value)?;
     println!("已设置别名: git {} -> {}", name, alias_value);
-    println!("\n现在可以使用 'git {}' 来运行 push-backup", name);
+    println!("\n现在可以使用 'git {}' 来运行 yewpb", name);
 
     Ok(())
 }

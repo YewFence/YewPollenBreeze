@@ -298,8 +298,8 @@ pub fn which_command(cmd: &str) -> Result<Option<String>> {
 // Git Hook 相关函数
 // ============================================================================
 
-const HOOK_START_MARKER: &str = "# === push-backup-hook-start ===";
-const HOOK_END_MARKER: &str = "# === push-backup-hook-end ===";
+const HOOK_START_MARKER: &str = "# === yewpb-hook-start ===";
+const HOOK_END_MARKER: &str = "# === yewpb-hook-end ===";
 
 /// 编译时嵌入的 hook 脚本内容
 const HOOK_SCRIPT_TEMPLATE: &str = include_str!("scripts/pre-push.sh");
@@ -421,7 +421,7 @@ pub fn uninstall_pre_push_hook() -> Result<()> {
     Ok(())
 }
 
-/// 移除 hook 脚本中的 push-backup 部分
+/// 移除 hook 脚本中的 yewpb 部分
 fn remove_hook_section(content: &str) -> String {
     let lines: Vec<&str> = content.lines().collect();
     let mut result = Vec::new();
