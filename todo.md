@@ -6,16 +6,17 @@
 - [x] 配置导入/导出功能 (export/import 命令已实现，支持覆盖和合并模式)
 - [x] 配置管理功能(完整的 CRUD) (add/remove/list/show 命令已实现)
 - [x] 清理功能 (clean 命令清理本工具添加的 remote)
-- [] 单项目 remote 管理
-- [] Github Action 编译发布
+- [ ] 单项目 remote 管理
+- [x] Github Action 编译发布
 - [x] git alias 加载
 - [x] githook 支持
-- [] lefthook 支持
-- [] DEBUG模式
+- [ ] lefthook 支持
+- [ ] DEBUG模式
+- [ ] Scoop 安装支持
 
 ## 已有功能完善
 - [x] http 支持 (已实现，build_remote_url 支持任意格式)
 - [x] apply/clean : dry run
 - [x] 删除 remote (remove 命令已实现)
 - [x] 支持其他 git 参数传入 (主要是-f)
-- [] 完善 README
+- [x] 完善 README

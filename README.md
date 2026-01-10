@@ -15,7 +15,13 @@
 
 ## 🚀 快速开始
 
-### 1. 配置远程平台模板 URL
+### 1. 安装
+
+您可以直接从 [GitHub Releases](https://github.com/YewFence/YewPollenBreeze/releases/latest) 页面下载最新版本的二进制文件。
+
+下载后，请将可执行文件重命名为 `yewpb` (Windows下为 `yewpb.exe`) 并放入系统的 PATH 路径中。
+
+### 2. 配置远程平台模板 URL
 
 设置各个平台的 URL 基础格式：
 
@@ -27,7 +33,7 @@ yewpb config set github git@github.com:your-name
 yewpb config set gitea git@gitea.com:your-name
 ```
 
-### 2. 应用到当前仓库
+### 3. 应用到当前仓库
 
 在你的 Git 项目根目录下运行：
 
@@ -39,7 +45,7 @@ yewpb apply
 yewpb apply my-repo-name
 ```
 
-### 3. 一键推送
+### 4. 一键推送
 
 ```bash
 yewpb push
@@ -49,6 +55,24 @@ yewpb push
 如果出现网络问题，会自动短暂延迟后重试  
 相较于原生 `git push` yewpb 的超时时间会更短，并且会有明确的提示
 > 主要是我网不好的时候 `git push` 会卡住而且没有任何提示，然后一路等到 TCP 连接超时，有点奇怪，设计如此吗？
+
+## 🛠️ 从源码编译
+
+你也可以尝试从源码编译。
+
+### 前置要求
+
+- [Rust Toolchain](https://rustup.rs/) (1.75.0+)
+
+### 编译步骤
+
+```bash
+git clone https://github.com/YewFence/YewPollenBreeze.git
+cd YewPollenBreeze
+cargo build --release
+```
+
+编译完成后，可执行文件位于 `target/release/yewpb` (Windows下为 `yewpb.exe`)。
 
 ## 📖 详细使用指南/具体说明
 
@@ -169,5 +193,5 @@ yewpb push [参数]
 - 支持读取当前目录下的 `.env` 文件。
 
 ## 😶‍🌫️ 碎碎念
-> 这个名字也是贯彻了我一贯的风格，实际上原来没想好的时候是用的 Push Backup，现在的首字母仍然是 pb ，也是呼应了
-> Pollen: 花粉 Breeze: 微风，意指一个仓库如同飘飞的花粉一般乘风上云端
+> 这个名字也是贯彻了我一贯的风格，实际上原来没想好的时候是用的 Push Backup，现在的首字母仍然是 pb ，也是呼应了  
+> Pollen: 花粉 Breeze: 微风，意指一段代码如同飘飞的花粉一般乘风上云端
