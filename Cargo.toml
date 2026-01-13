@@ -2,6 +2,8 @@
 name = "yewpb"
 version = "0.1.0"
 edition = "2021"
+license = "MIT"
+authors = ["YewFence"]
 
 [dependencies]
 anyhow = "1.0.86"
